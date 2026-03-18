@@ -163,11 +163,12 @@ const SCHEDULE = [
 const CHART_START = dateAtStart('2026-03-01');
 const CHART_END = dateAtStart('2026-08-25');
 const TOTAL_DAYS = diffDays(CHART_START, CHART_END);
+const IMAGE_CACHE_BUST = '20260318b';
 
 const toImageUrl = (accident, fileName) => {
   const base = import.meta.env.BASE_URL || '/';
   const normalizedBase = base.endsWith('/') ? base : `${base}/`;
-  return `${normalizedBase}image-assets/${accident.id}/${fileName}`;
+  return `${normalizedBase}image-assets/${accident.id}/${fileName}?v=${IMAGE_CACHE_BUST}`;
 };
 
 function App() {
