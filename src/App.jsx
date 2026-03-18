@@ -167,7 +167,7 @@ const TOTAL_DAYS = diffDays(CHART_START, CHART_END);
 const toImageUrl = (accident, fileName) => {
   const base = import.meta.env.BASE_URL || '/';
   const normalizedBase = base.endsWith('/') ? base : `${base}/`;
-  return `${normalizedBase}pngs/${encodeURIComponent(accident.imageDir)}/${encodeURIComponent(fileName)}`;
+  return `${normalizedBase}image-assets/${accident.id}/${fileName}`;
 };
 
 function App() {
