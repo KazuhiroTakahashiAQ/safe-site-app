@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+<title>事故・品質事例提案くん（デモ）</title>
+<style>
+:root{
+  --bg:#eceff4; --panel:#ffffff; --ink:#17293e; --ink2:#3c4f66; --muted:#68798d; --faint:#9db0c3;
+  --line:#dde4ee; --line2:#e9eef5;
+  --blue:#2563eb; --blue-d:#1d4ed8; --blue-t:#eff6ff;
+  --red:#dc2626; --red-t:#fef2f2; --red-l:#fecaca;
+  --teal:#0f766e; --teal-b:#14b8a6; --teal-t:#f0fdfa; --teal-l:#99e5d8;
+  --amber:#b45309; --amber-t:#fef3c7;
+  --side:#0e2138; --side2:#0a1a2e;
+  --r:14px;
+  --sh:0 1px 2px rgba(16,24,40,.05),0 6px 18px -10px rgba(16,24,40,.14);
+  --sh2:0 2px 4px rgba(16,24,40,.06),0 16px 34px -14px rgba(16,24,40,.25);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic",Meiryo,sans-serif;
+  font-size:14px; line-height:1.55; overflow:hidden;
+}
+button{font:inherit; cursor:pointer}
+img{display:block}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#c2cfe0;border-radius:8px;border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:#a3b5cc;border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ===== 全体レイアウト ===== */
+.app{height:100dvh; display:grid; grid-template-columns:230px minmax(0,1fr)}
+.app.closed{grid-template-columns:62px minmax(0,1fr)}
+
+/* ===== サイドバー ===== */
+.side{
+  background:linear-gradient(180deg,var(--side),var(--side2));
+  color:#c9d8ee; display:flex; flex-direction:column; padding:16px 10px 12px; gap:6px;
+}
+.side-head{display:flex; align-items:center; justify-content:space-between; gap:6px; padding:0 4px 12px}
+.app.closed .side-head{flex-direction:column; gap:10px; padding-bottom:10px}
+.brand{display:flex; align-items:center; gap:9px; min-width:0}
+.brand .mark{
+  width:36px;height:36px;border-radius:10px;flex-shrink:0;
+  background:linear-gradient(135deg,#3b82f6,#1d4ed8);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 14px -6px rgba(59,130,246,.8);
+}
+.brand .mark svg{width:22px;height:22px}
+.brand b{display:block; color:#f4f8ff; font-size:15px; line-height:1.2; letter-spacing:.03em; white-space:nowrap}
+.toggle{
+  width:27px;height:27px;border-radius:8px;flex-shrink:0;
+  border:1px solid rgba(201,216,238,.35); background:rgba(148,184,255,.1); color:#dbe6fa;
+  display:inline-flex;align-items:center;justify-content:center; font-size:14px; line-height:1;
+}
+.toggle:hover{background:rgba(148,184,255,.25); color:#fff}
+.nav{display:grid; gap:4px; margin-top:2px}
+.nav button{
+  border:0; border-radius:10px; background:transparent; color:#d7e4f8;
+  padding:10px 11px; display:flex; align-items:center; gap:10px;
+  font-size:13.5px; font-weight:700; text-align:left; white-space:nowrap;
+  transition:background .15s,color .15s;
+}
+.nav button svg{width:17px;height:17px;flex-shrink:0}
+.nav button:hover{background:rgba(148,184,255,.14); color:#fff}
+.nav button.on{background:var(--blue); color:#fff; box-shadow:0 8px 16px -8px rgba(37,99,235,.9)}
+.app.closed .nav button{justify-content:center; padding:10px 0}
+.app.closed .nav button span{display:none}
+.app.closed .brand b{display:none}
+.side-foot{margin-top:auto; padding:10px 6px 2px; color:#7e93b3; font-size:11px; line-height:1.5}
+.app.closed .side-foot{display:none}
+
+/* ===== メイン ===== */
+.main{min-width:0; min-height:0; display:flex; flex-direction:column}
+.view{flex:1; min-height:0; display:none; flex-direction:column; gap:13px; padding:14px 16px 16px}
+.view.on{display:flex}
+.card{
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--r);
+  box-shadow:var(--sh); padding:14px 16px; min-width:0;
+}
+.card h2{margin:0; font-size:16.5px; font-weight:800; display:flex; align-items:center; gap:8px; letter-spacing:.02em}
+.card h2 .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.note{margin:5px 0 0; color:var(--muted); font-size:12px}
+.summary{margin:7px 0 0; color:var(--muted); font-size:12px; font-weight:700}
+
+/* ===== 工程表ビュー ===== */
+.sim{gap:13px}
+.gantt-card{display:flex; flex-direction:column; min-height:0; flex:0 1 auto}
+.gantt-scroll{overflow:auto; border:1px solid var(--line); border-radius:11px; background:#fbfcfe; margin-top:10px; min-height:0}
+.gantt{position:relative; padding:0 10px 8px 0}
+.g-head{
+  position:sticky; top:0; z-index:40; height:32px; background:#f3f6fb;
+  border-bottom:1px solid var(--line); display:grid; grid-template-columns:250px minmax(0,1fr); align-items:center;
+}
+.g-head .lab{
+  position:sticky; left:0; z-index:41; background:#f3f6fb; height:100%;
+  display:flex; align-items:center; padding-left:11px; font-weight:800; color:var(--muted); font-size:12px;
+}
+.g-head .track{position:relative; height:100%}
+.g-head .track span{position:absolute; top:50%; transform:translate(-50%,-50%); color:var(--faint); font-size:11px; font-weight:700; white-space:nowrap}
+.g-rows{
+  display:grid; gap:3px; padding-top:5px;
+  background-image:repeating-linear-gradient(90deg, rgba(100,116,139,.13) 0, rgba(100,116,139,.13) 1px, transparent 1px, transparent 98px);
+  background-position:250px 0; background-repeat:repeat-y;
+}
+.g-row{position:relative; height:26px; border-radius:6px; opacity:.42}
+.g-row:hover{background:rgba(37,99,235,.05); opacity:.7}
+.g-row.act{opacity:1}
+.g-row .nm{
+  position:sticky; left:0; z-index:6; width:242px; height:100%; padding-left:11px;
+  display:flex; align-items:center; font-size:12.5px; font-weight:700; color:var(--ink2);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  background:linear-gradient(90deg,#fbfcfe 88%,rgba(251,252,254,0));
+}
+.g-row:not(.act) .nm{color:var(--faint)}
+.g-row .bar{
+  position:absolute; top:50%; transform:translateY(-50%); height:15px; border-radius:999px;
+  background:linear-gradient(90deg,#60a5fa,#2563eb); box-shadow:0 4px 10px -4px rgba(37,99,235,.55);
+}
+.g-row:not(.act) .bar{background:linear-gradient(90deg,#bccadd,#a9bcd4); box-shadow:none}
+.today{
+  position:absolute; top:32px; bottom:3px; width:2px; background:#ef4444; z-index:50; cursor:ew-resize;
+}
+.today .pill{
+  position:absolute; top:-25px; left:50%; transform:translateX(-50%);
+  background:#ef4444; color:#fff; border-radius:999px; padding:1.5px 8px;
+  font-size:11px; font-weight:800; white-space:nowrap; box-shadow:0 4px 10px -4px rgba(239,68,68,.8);
+}
+.today .dotb{
+  position:absolute; bottom:-6px; left:-6px; width:13px; height:13px; border-radius:50%;
+  background:#ef4444; border:2px solid #fff; box-shadow:0 2px 6px rgba(16,24,40,.3);
+}
+.dual{display:grid; grid-template-columns:1fr 1fr; gap:13px; flex:1; min-height:0}
+.list-card{display:flex; flex-direction:column; min-height:0}
+.list-card .items{margin-top:10px; overflow:auto; flex:1; min-height:0; display:flex; flex-direction:column; gap:11px; padding:2px 3px 2px 1px}
+.empty{
+  border:1.5px dashed #cbd5e1; border-radius:11px; padding:13px 15px; margin-top:10px;
+  color:var(--muted); font-size:12.5px; line-height:1.65; background:#f8fafc;
+}
+
+/* ===== 事例カード ===== */
+.case{
+  border:1px solid var(--line); border-radius:12px; background:#fff; padding:11px 12px;
+  display:grid; grid-template-columns:158px minmax(0,1fr); gap:12px; align-items:start; flex-shrink:0;
+  transition:box-shadow .15s,border-color .15s;
+}
+.case:hover{border-color:#c3d2e8; box-shadow:var(--sh2)}
+.case .thumb img{width:100%; max-height:190px; object-fit:contain; border:1px solid var(--line2); border-radius:9px; background:#f8fafc; cursor:zoom-in}
+.case .body{display:grid; gap:4px; align-content:start; min-width:0}
+.meta{display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:11.5px; font-weight:800; color:var(--blue)}
+.chip{background:var(--teal-t); color:var(--teal); border:1px solid var(--teal-l); border-radius:999px; padding:1.5px 9px; font-size:11.5px}
+.chip.red{background:var(--red-t); color:var(--red); border-color:var(--red-l)}
+.cid{color:var(--faint); font-weight:700}
+.facts{color:var(--muted); font-weight:700; font-size:12px; display:flex; align-items:center; flex-wrap:wrap; gap:7px; margin:0}
+.sev{border-radius:999px; padding:1px 8px; font-size:11px; font-weight:800}
+.sev-high{background:#fee2e2; color:#b91c1c}
+.sev-mid{background:var(--amber-t); color:var(--amber)}
+.sev-low{background:#e2e8f0; color:#475569}
+.case h3{margin:2px 0 1px; font-size:15px; font-weight:800; line-height:1.4}
+.case p{margin:0; color:var(--ink2); font-size:12.8px; line-height:1.65}
+.detail{display:none; gap:4px; align-content:start}
+.case.open .detail{display:grid}
+.tags{display:flex; flex-wrap:wrap; gap:5px; margin-top:2px}
+.tags span{background:#eef2f7; border-radius:999px; padding:2.5px 8px; font-size:11px; font-weight:600; color:#44546a}
+.cm{background:var(--blue-t); border:1px solid #d7e6fd; border-left:4px solid var(--blue); border-radius:9px; padding:7px 10px; margin-top:2px}
+.case.quality .cm{background:var(--teal-t); border-color:#c9efe7; border-left-color:var(--teal-b)}
+.fold{
+  justify-self:start; margin-top:5px; border:1px solid var(--line); background:#f8fafc; color:var(--blue);
+  border-radius:999px; padding:4.5px 12px; font-size:12px; font-weight:800;
+  display:inline-flex; align-items:center; gap:4px;
+}
+.fold:hover{background:var(--blue-t); border-color:#b9d0f7}
+.case.quality .fold{color:var(--teal)}
+.case.quality .fold:hover{background:var(--teal-t); border-color:var(--teal-l)}
+.imgcount{color:var(--blue); font-size:11.5px; font-weight:700}
+
+/* ===== 写真で判別ビュー ===== */
+.photo-view{flex-direction:row; align-items:stretch}
+.photo-rail{width:372px; flex-shrink:0; display:flex; flex-direction:column; min-height:0}
+.photo-rail .card{flex:1; overflow:auto; display:flex; flex-direction:column; gap:11px}
+.photo-results{flex:1; min-width:0; overflow:auto; display:flex; flex-direction:column; gap:13px; padding-right:2px}
+.photo-results .list-card{flex:0 0 auto}
+.photo-results .items{overflow:visible; flex:none}
+.picker{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+.pthumb{
+  border:2px solid var(--line); border-radius:11px; background:#fff; padding:6px;
+  display:grid; gap:5px; justify-items:center; font-size:12px; font-weight:700; color:var(--ink2);
+  transition:border-color .15s, box-shadow .15s;
+}
+.pthumb:hover{border-color:#9db9e8}
+.pthumb.sel{border-color:var(--teal-b); box-shadow:0 0 0 2px rgba(20,184,166,.3)}
+.pthumb img{width:100%; height:76px; object-fit:cover; border-radius:7px}
+.pthumb.up{border-style:dashed; color:var(--muted); place-items:center; align-content:center; min-height:104px; font-size:24px}
+.pthumb.up small{font-size:12px; font-weight:700}
+.preview{border:1px solid var(--line); border-radius:11px; background:#f8fafc; padding:7px}
+.preview img{width:100%; max-height:250px; object-fit:contain; border-radius:8px; margin:0 auto}
+.btn{
+  border:0; border-radius:10px; background:linear-gradient(135deg,#2f7df6,#1d4ed8); color:#fff;
+  padding:10px 18px; font-size:13.5px; font-weight:800; display:inline-flex; align-items:center; gap:7px;
+  box-shadow:0 8px 18px -8px rgba(37,99,235,.8);
+}
+.btn:hover:not(:disabled){filter:brightness(1.08)}
+.btn:disabled{opacity:.45; cursor:not-allowed; box-shadow:none}
+.hint{color:var(--faint); font-size:12px; font-weight:600}
+.spin{display:inline-block; animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.cands{display:grid; gap:6px; border-top:1px solid var(--line2); padding-top:10px}
+.cands h3{margin:0 0 2px; font-size:13.5px; font-weight:800}
+.cand{
+  border:1.5px solid var(--line); background:#fff; border-radius:10px; padding:8px 11px;
+  display:grid; grid-template-columns:106px minmax(50px,1fr) 40px; align-items:center; gap:10px; text-align:left; width:100%;
+}
+.cand .nm{white-space:nowrap}
+.cand:hover{border-color:#9db9e8}
+.cand.sel{border-color:var(--teal-b); background:var(--teal-t)}
+.cand .nm{font-weight:800; font-size:13px}
+.cand .barbg{height:8px; border-radius:999px; background:#e6ebf2; overflow:hidden}
+.cand .barbg i{display:block; height:100%; border-radius:999px; background:linear-gradient(90deg,#2dd4bf,#0f766e)}
+.cand .sc{font-weight:800; color:var(--teal); text-align:right}
+.cand .nt{grid-column:1/-1; color:var(--muted); font-size:11.5px}
+.wait{
+  flex:1; display:flex; align-items:center; justify-content:center; text-align:center;
+  color:var(--muted); font-size:13.5px; line-height:1.8; border:1.5px dashed #cbd5e1; border-radius:var(--r); background:#f8fafc; padding:30px;
+}
+
+/* ===== ライブラリビュー ===== */
+.lib{flex-direction:row; align-items:stretch}
+.lib-left{flex:1.35; min-width:0; display:flex; flex-direction:column; min-height:0}
+.lib-left .card{flex:1; display:flex; flex-direction:column; min-height:0}
+.lib-grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; overflow:auto; min-height:0; margin-top:10px; padding:2px 3px 2px 1px; align-content:start}
+.lib-card{
+  border:1px solid var(--line); background:#fff; border-radius:12px; padding:10px 11px; text-align:left;
+  transition:border-color .15s, box-shadow .15s, background .15s;
+}
+.lib-card:hover{border-color:#9db9e8; box-shadow:var(--sh)}
+.lib-card.sel{border-color:var(--blue); background:var(--blue-t); box-shadow:0 0 0 1px var(--blue)}
+.lib-card h3{margin:3px 0 2px; font-size:13.5px; font-weight:800; line-height:1.45}
+.lib-card p{margin:0; color:var(--ink2); font-size:12px; line-height:1.55; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+.lib-right{flex:1; min-width:0; display:flex; flex-direction:column; min-height:0}
+.lib-right .card{flex:1; display:flex; flex-direction:column; min-height:0}
+.lib-right .items{margin-top:10px; overflow:auto; flex:1; min-height:0; display:flex; flex-direction:column; gap:11px; padding:2px 3px 2px 1px}
+.chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:9px}
+.chips button{border:1px solid var(--line); background:#fff; color:var(--ink2); border-radius:999px; padding:5.5px 12px; font-size:12.5px; font-weight:700}
+.chips button:hover{border-color:var(--teal-b); color:var(--teal)}
+.chips button.on{background:var(--teal); border-color:var(--teal); color:#fff}
+
+/* ===== モーダル ===== */
+.modal{position:fixed; inset:0; background:rgba(5,10,20,.78); backdrop-filter:blur(3px); display:none; align-items:center; justify-content:center; z-index:90; padding:18px}
+.modal.on{display:flex}
+.modal-in{width:min(1150px,95vw); max-height:92vh; background:#0a1327; border:1px solid #2c3c62; border-radius:13px; padding:12px; display:grid; gap:8px}
+.modal-bar{display:flex; align-items:center; justify-content:center; gap:8px}
+.modal-bar .pg{min-width:70px; text-align:center; color:#dce7ff; font-weight:700; font-size:13px}
+.mnav{width:33px; height:33px; border-radius:8px; border:1px solid #425784; background:#142544; color:#f5f7ff; display:inline-flex; align-items:center; justify-content:center; font-size:15px}
+.mnav:disabled{opacity:.35; cursor:not-allowed}
+.mclose{justify-self:end; border:1px solid #425784; border-radius:8px; background:#142544; color:#f5f7ff; padding:5px 11px; font-size:12.5px}
+.modal-in img{width:100%; max-height:calc(92vh - 70px); object-fit:contain; background:#fff; border-radius:9px}
+
+@media (max-width:1080px){
+  body{overflow:auto}
+  .app,.app.closed{grid-template-columns:1fr; height:auto; min-height:100dvh}
+  .side{flex-direction:row; flex-wrap:wrap; align-items:center}
+  .nav{display:flex; flex-wrap:wrap}
+  .side-foot{display:none}
+  .view{padding:10px}
+  .dual{grid-template-columns:1fr}
+  .photo-view,.lib{flex-direction:column}
+  .photo-rail{width:100%}
+  .case{grid-template-columns:1fr}
+  .lib-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <aside class="side">
+    <div class="side-head">
+      <div class="brand">
+        <span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6a8 8 0 0 1 13.5-5.5M22 18a8 8 0 0 1-13.5 5.5"/><path d="M8.5 12h7M12 8.5v7"/></svg></span>
+        <b>事故・品質事例<br/>提案くん</b>
+      </div>
+      <button class="toggle" id="sideToggle" aria-label="サイドバーを開閉">‹</button>
+    </div>
+    <nav class="nav" id="nav">
+      <button data-tab="sim" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span>工程表</span></button>
+      <button data-tab="photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>写真で判別</span></button>
+      <button data-tab="lib-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span>災害事例ライブラリ</span></button>
+      <button data-tab="lib-q"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span>不具合事例ライブラリ</span></button>
+    </nav>
+    <div class="side-foot">安全（災害）事例 9件<br/>品質不具合事例 60件（3工種）<br/>デモ版：写真判別は決め打ち</div>
+  </aside>
+  <main class="main" id="main"></main>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-in">
+    <div class="modal-bar">
+      <button class="mnav" id="mPrev">‹</button>
+      <span class="pg" id="mPage"></span>
+      <button class="mnav" id="mNext">›</button>
+    </div>
+    <button class="mclose" id="mClose">閉じる</button>
+    <img id="mImg" alt="拡大画像" />
+  </div>
+</div>
+
+<script>
+const DATA = /*__DATA__*/{};
+</script>
+<script>
+'use strict';
+const { TRADES, CASES, SAMPLE_PHOTOS, ACCIDENTS, SCHEDULE } = DATA;
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => [...(r || document).querySelectorAll(s)];
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const DAY_MS = 86400000, DAY_W = 7, LABEL_W = 250, TICK = 14;
+const pDate = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const fDate = (dt) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+const addD = (dt, n) => new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() + n);
+const diffD = (a, b) => Math.round((pDate(fDate(b)) - pDate(fDate(a))) / DAY_MS);
+const START = pDate('2026-03-01'), END = pDate('2026-08-25');
+const TOTAL = diffD(START, END);
+
+const CATEGORY_TO_TRADES = { '地下・基礎': ['rebar', 'concrete'], '躯体・コンクリ': ['rebar', 'concrete'], '鉄骨・躯体': ['steel'] };
+const TRADE_TO_DISASTER = { rebar: ['躯体・コンクリ', '地下・基礎'], concrete: ['躯体・コンクリ', '地下・基礎'], steel: ['鉄骨・躯体'] };
+const SEV = { '重大': 'high', '中': 'mid', '軽微': 'low' };
+const accImg = (a, f) => `image-assets/${a.id}/${f}?v=20260318b`;
+const qImg = (c) => `quality-illust/${c.trade}-${c.illust}.png`;
+
+const S = {
+  tab: 'sim',
+  dayOffset: diffD(START, pDate('2026-03-18')),
+  selAccident: ACCIDENTS[0].id,
+  selCase: CASES[0].id,
+  qFilter: 'all',
+  photo: { kind: null, sampleId: null, upUrl: null, upName: '', analyzing: false, cands: null, chosen: null },
+};
+const curDate = () => addD(START, S.dayOffset);
+const activeTasks = () => { const t = curDate().getTime(); return SCHEDULE.filter((x) => pDate(x.start).getTime() <= t && t <= pDate(x.end).getTime()); };
+const disasterNow = () => { const cats = activeTasks().map((x) => x.category); return ACCIDENTS.filter((a) => cats.includes(a.category) || (a.relatedCategories || []).some((c) => cats.includes(c))); };
+const qualityPool = () => { const set = new Set(); activeTasks().forEach((x) => (CATEGORY_TO_TRADES[x.category] || []).forEach((t) => set.add(t))); return { trades: set, pool: CASES.filter((c) => set.has(c.trade)) }; };
+
+function seededShuffle(list, seedText) {
+  let seed = 2166136261;
+  for (let i = 0; i < seedText.length; i++) { seed ^= seedText.charCodeAt(i); seed = Math.imul(seed, 16777619); }
+  const rand = () => { seed = Math.imul(seed ^ (seed >>> 15), 2246822519); seed = Math.imul(seed ^ (seed >>> 13), 3266489917); seed ^= seed >>> 16; return (seed >>> 0) / 4294967296; };
+  const arr = [...list];
+  for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+  return arr;
+}
+const dailyCases = (pool, dateStr, n = 10) => (pool.length <= n ? pool : seededShuffle(pool, `quality-${dateStr}`).slice(0, n));
+
+/* ===== カード ===== */
+function disasterCard(a) {
+  return `<article class="case">
+    <div class="thumb"><img src="${accImg(a, a.imageFiles[0])}" alt="${esc(a.title)}" data-zoom-acc="${a.id}" /></div>
+    <div class="body">
+      <div class="meta"><span>${esc(a.category)}</span><span class="cid">#${a.id}</span></div>
+      <p class="facts">${esc(a.type)}</p>
+      <h3>${esc(a.title)}</h3>
+      <p>${esc(a.description)}</p>
+      <div class="detail">
+        <p class="imgcount">資料画像: ${a.imageFiles.length} 枚（画像クリックで拡大）</p>
+        <div class="tags">${a.keywords.map((k) => `<span>${esc(k)}</span>`).join('')}</div>
+        <p class="cm">再発防止策: ${esc(a.countermeasure)}</p>
+      </div>
+      <button class="fold" data-act="fold">詳細表示 ▾</button>
+    </div>
+  </article>`;
+}
+function qualityCard(c) {
+  const t = TRADES[c.trade];
+  return `<article class="case quality">
+    <div class="thumb"><img src="${qImg(c)}" alt="${esc(c.title)} イラスト" data-zoom-q="${c.id}" /></div>
+    <div class="body">
+      <div class="meta"><span class="chip">${esc(t.label)}</span><span class="cid">#${c.id}</span></div>
+      <p class="facts">${esc(c.type)}／発見：${esc(c.foundAt)}／部位：${esc(c.part)}<span class="sev sev-${SEV[c.severity] || 'low'}">重大度：${esc(c.severity)}</span></p>
+      <h3>${esc(c.title)}</h3>
+      <p>${esc(c.description)}</p>
+      <div class="detail">
+        <p><strong>原因：</strong>${esc(c.cause)}</p>
+        <p><strong>是正：</strong>${esc(c.correction)}</p>
+        <div class="tags">${c.keywords.map((k) => `<span>${esc(k)}</span>`).join('')}</div>
+        <p class="cm">再発防止：${esc(c.countermeasure)}</p>
+      </div>
+      <button class="fold" data-act="fold">詳細表示 ▾</button>
+    </div>
+  </article>`;
+}
+
+/* ===== 工程表ビュー ===== */
+function simView() {
+  const tasks = activeTasks();
+  const sugg = disasterNow();
+  const { trades, pool } = qualityPool();
+  const picks = dailyCases(pool, fDate(curDate()));
+  const imgTotal = sugg.reduce((n, a) => n + a.imageFiles.length, 0);
+  let ticks = '';
+  for (let d = 0; d <= TOTAL; d += TICK) { const t = addD(START, d); ticks += `<span style="left:${d * DAY_W}px">${t.getMonth() + 1}/${t.getDate()}</span>`; }
+  const rows = SCHEDULE.map((x) => {
+    const act = tasks.some((t) => t.id === x.id);
+    const left = LABEL_W + diffD(START, pDate(x.start)) * DAY_W;
+    const w = Math.max(30, (diffD(pDate(x.start), pDate(x.end)) + 1) * DAY_W);
+    return `<div class="g-row ${act ? 'act' : ''}"><div class="nm" title="${esc(x.task)}">${esc(x.task)}</div><div class="bar" style="left:${left}px;width:${w}px"></div></div>`;
+  }).join('');
+  const lineLeft = LABEL_W + S.dayOffset * DAY_W;
+  return `<section class="view sim on">
+    <div class="card gantt-card">
+      <h2>今日起こりそうな事故・不具合</h2>
+      <p class="note">赤い縦ラインをドラッグして日付を変更してください。その日の工程に基づいた事例が表示されます。</p>
+      <div class="gantt-scroll" id="gScroll">
+        <div class="gantt" style="width:${LABEL_W + TOTAL * DAY_W + 90}px">
+          <div class="g-head"><div class="lab">工程</div><div class="track">${ticks}</div></div>
+          <div class="today" id="todayLine" style="left:${lineLeft}px"><span class="pill">${fDate(curDate())}</span><i class="dotb"></i></div>
+          <div class="g-rows">${rows}</div>
+        </div>
+      </div>
+    </div>
+    <div class="dual">
+      <div class="card list-card">
+        <h2><span class="dot" style="background:var(--red)"></span>災害事例（左）</h2>
+        <p class="summary">事例 ${sugg.length} 件／資料画像 合計 ${imgTotal} 枚</p>
+        ${sugg.length === 0 ? '<div class="empty">この日付に該当する重点警戒事例はありません。</div>' : `<div class="items">${sugg.map(disasterCard).join('')}</div>`}
+      </div>
+      <div class="card list-card">
+        <h2><span class="dot" style="background:var(--teal)"></span>品質不具合事例（右）</h2>
+        <p class="summary">対象工種：${trades.size ? [...trades].map((t) => TRADES[t].label).join('、') : 'なし'}${pool.length > picks.length ? `／全${pool.length}件から本日の重点${picks.length}件（日付でローテーション）` : `／事例 ${picks.length} 件`}</p>
+        ${picks.length === 0 ? '<div class="empty">この日の工程に対応する品質事例はありません。品質事例があるのは躯体系の工程（地下・基礎／躯体・コンクリ／鉄骨・躯体）で、対象は鉄筋・コンクリート・鉄骨の3工種です。他工種は準備中です。</div>' : `<div class="items">${picks.map(qualityCard).join('')}</div>`}
+      </div>
+    </div>
+  </section>`;
+}
+
+/* ===== 写真で判別ビュー ===== */
+function photoView() {
+  const P = S.photo;
+  const sample = P.kind === 'sample' ? SAMPLE_PHOTOS.find((p) => p.id === P.sampleId) : null;
+  const preview = P.kind === 'upload' ? P.upUrl : sample ? sample.src : null;
+  const thumbs = SAMPLE_PHOTOS.map((p) => `
+    <button class="pthumb ${P.kind === 'sample' && P.sampleId === p.id ? 'sel' : ''}" data-act="photo-sample" data-id="${p.id}">
+      <img src="${p.src}" alt="${esc(p.label)}" /><span>${esc(p.label)}</span>
+    </button>`).join('');
+  let cands = '';
+  if (P.cands) {
+    cands = `<div class="cands"><h3>判別候補（デモ用決め打ち）</h3>${P.cands.map((c) => `
+      <button class="cand ${P.chosen === c.trade ? 'sel' : ''}" data-act="cand" data-trade="${c.trade}">
+        <span class="nm">${esc(TRADES[c.trade].label)}</span>
+        <span class="barbg"><i style="width:${c.score}%"></i></span>
+        <span class="sc">${c.score}%</span>
+        <span class="nt">${esc(c.note)}</span>
+      </button>`).join('')}
+      <p class="note">候補をクリックで切り替えられます。右に選択中の工種の事例を表示しています。</p></div>`;
+  }
+  let results;
+  if (P.chosen && P.cands) {
+    const qc = CASES.filter((c) => c.trade === P.chosen);
+    const cats = TRADE_TO_DISASTER[P.chosen] || [];
+    const sc = ACCIDENTS.filter((a) => cats.includes(a.category) || (a.relatedCategories || []).some((x) => cats.includes(x)));
+    results = `
+      <div class="card list-card">
+        <h2><span class="dot" style="background:var(--teal)"></span>${esc(TRADES[P.chosen].label)}の不具合事例（${qc.length}件）</h2>
+        <div class="items">${qc.map(qualityCard).join('')}</div>
+      </div>
+      ${sc.length ? `<div class="card list-card">
+        <h2><span class="dot" style="background:var(--red)"></span>関連する安全（災害）事例（${sc.length}件）</h2>
+        <div class="items">${sc.map(disasterCard).join('')}</div>
+      </div>` : ''}`;
+  } else {
+    results = `<div class="wait">写真を選んで「工種を判別する」を押すと、<br/>ここに不具合事例と安全事例が表示されます。</div>`;
+  }
+  return `<section class="view photo-view on">
+    <div class="photo-rail">
+      <div class="card">
+        <h2>現場写真から工種を判別</h2>
+        <p class="note">写真を選ぶ（またはアップロードする）と工種の候補を提示します。候補から工種を選ぶと、その工種の品質不具合事例と関連する安全（災害）事例が右に表示されます。<strong>デモ版では判別は決め打ちです</strong>（本番ではLLMの画像認識で判別する想定）。</p>
+        <div class="picker">
+          ${thumbs}
+          <label class="pthumb up ${P.kind === 'upload' ? 'sel' : ''}">＋<small>自分の写真を<br/>アップロード</small><input type="file" id="upFile" accept="image/*" hidden /></label>
+        </div>
+        ${preview ? `<div class="preview"><img src="${preview}" alt="判別対象の写真" /></div>` : ''}
+        <div>
+          <button class="btn" data-act="analyze" ${!P.kind || P.analyzing ? 'disabled' : ''}>${P.analyzing ? '<span class="spin">⟳</span> 判別中…' : '工種を判別する'}</button>
+          ${!P.kind ? '<span class="hint">　まず写真を選んでください</span>' : ''}
+        </div>
+        ${cands}
+      </div>
+    </div>
+    <div class="photo-results">${results}</div>
+  </section>`;
+}
+
+/* ===== ライブラリビュー ===== */
+function libSView() {
+  const sel = ACCIDENTS.find((a) => a.id === S.selAccident) || ACCIDENTS[0];
+  return `<section class="view lib on">
+    <div class="lib-left"><div class="card">
+      <h2>災害事例ライブラリ</h2>
+      <div class="lib-grid">${ACCIDENTS.map((a) => `
+        <button class="lib-card ${sel.id === a.id ? 'sel' : ''}" data-act="lib-s" data-id="${a.id}">
+          <div class="meta"><span>${esc(a.category)}</span><span class="cid">#${a.id}</span></div>
+          <h3>${esc(a.title)}</h3><p>${esc(a.description)}</p>
+        </button>`).join('')}</div>
+    </div></div>
+    <div class="lib-right"><div class="card">
+      <h2>選択中の事例詳細・資料</h2>
+      <div class="items">${disasterCard(sel)}</div>
+    </div></div>
+  </section>`;
+}
+function libQView() {
+  const list = S.qFilter === 'all' ? CASES : CASES.filter((c) => c.trade === S.qFilter);
+  const sel = CASES.find((c) => c.id === S.selCase) || CASES[0];
+  const chips = [`<button data-act="chip" data-id="all" class="${S.qFilter === 'all' ? 'on' : ''}">全て（${CASES.length}）</button>`,
+    ...Object.values(TRADES).map((t) => `<button data-act="chip" data-id="${t.id}" class="${S.qFilter === t.id ? 'on' : ''}">${esc(t.label)}（${CASES.filter((c) => c.trade === t.id).length}）</button>`)].join('');
+  return `<section class="view lib on">
+    <div class="lib-left"><div class="card">
+      <h2>品質不具合事例ライブラリ</h2>
+      <div class="chips">${chips}</div>
+      <div class="lib-grid">${list.map((c) => `
+        <button class="lib-card ${sel.id === c.id ? 'sel' : ''}" data-act="lib-q" data-id="${c.id}">
+          <div class="meta"><span class="chip">${esc(TRADES[c.trade].label)}</span><span class="cid">#${c.id}</span></div>
+          <h3>${esc(c.title)}</h3><p>${esc(c.description)}</p>
+        </button>`).join('')}</div>
+    </div></div>
+    <div class="lib-right"><div class="card">
+      <h2>選択中の事例詳細・資料</h2>
+      <div class="items">${qualityCard(sel)}</div>
+    </div></div>
+  </section>`;
+}
+
+/* ===== 描画とイベント ===== */
+const VIEWS = { sim: simView, photo: photoView, 'lib-s': libSView, 'lib-q': libQView };
+function render() {
+  $('#main').innerHTML = VIEWS[S.tab]();
+  $$('#nav button').forEach((b) => b.classList.toggle('on', b.dataset.tab === S.tab));
+  bindGantt();
+}
+$('#nav').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-tab]');
+  if (!b) return;
+  S.tab = b.dataset.tab;
+  render();
+});
+$('#sideToggle').addEventListener('click', () => {
+  const app = $('#app');
+  app.classList.toggle('closed');
+  $('#sideToggle').textContent = app.classList.contains('closed') ? '›' : '‹';
+});
+
+function bindGantt() {
+  const line = $('#todayLine'), scroll = $('#gScroll');
+  if (!line || !scroll) return;
+  line.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    const startX = e.clientX, startOff = S.dayOffset;
+    const move = (ev) => {
+      const off = Math.max(0, Math.min(TOTAL, Math.round(startOff + (ev.clientX - startX) / DAY_W)));
+      line.style.left = `${LABEL_W + off * DAY_W}px`;
+      line.querySelector('.pill').textContent = fDate(addD(START, off));
+      line._off = off;
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      if (line._off !== undefined && line._off !== S.dayOffset) { S.dayOffset = line._off; render(); }
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  });
+}
+
+$('#main').addEventListener('click', (e) => {
+  const fold = e.target.closest('[data-act="fold"]');
+  if (fold) {
+    const card = fold.closest('.case');
+    card.classList.toggle('open');
+    fold.innerHTML = card.classList.contains('open') ? '詳細を閉じる ▴' : '詳細表示 ▾';
+    return;
+  }
+  const zq = e.target.closest('[data-zoom-q]');
+  if (zq) { const c = CASES.find((x) => x.id === zq.dataset.zoomQ); if (c) openModal([qImg(c)], 0, c.title); return; }
+  const za = e.target.closest('[data-zoom-acc]');
+  if (za) { const a = ACCIDENTS.find((x) => x.id === Number(za.dataset.zoomAcc)); if (a) openModal(a.imageFiles.map((f) => accImg(a, f)), 0, a.title); return; }
+  const t = e.target.closest('[data-act]');
+  if (!t) return;
+  const act = t.dataset.act;
+  if (act === 'photo-sample') { S.photo = { ...S.photo, kind: 'sample', sampleId: t.dataset.id, cands: null, chosen: null }; render(); }
+  else if (act === 'analyze') { runAnalyze(); }
+  else if (act === 'cand') { S.photo.chosen = t.dataset.trade; render(); }
+  else if (act === 'lib-s') { S.selAccident = Number(t.dataset.id); render(); }
+  else if (act === 'lib-q') { S.selCase = t.dataset.id; render(); }
+  else if (act === 'chip') { S.qFilter = t.dataset.id; render(); }
+});
+document.addEventListener('change', (e) => {
+  if (e.target.id !== 'upFile') return;
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  S.photo = { kind: 'upload', sampleId: null, upUrl: URL.createObjectURL(file), upName: file.name, analyzing: false, cands: null, chosen: null };
+  render();
+});
+function runAnalyze() {
+  const P = S.photo;
+  if (!P.kind || P.analyzing) return;
+  P.analyzing = true; P.cands = null; P.chosen = null;
+  render();
+  setTimeout(() => {
+    let result;
+    if (P.kind === 'sample') {
+      const s = SAMPLE_PHOTOS.find((p) => p.id === P.sampleId);
+      result = s ? s.candidates : [];
+    } else {
+      const order = ['rebar', 'concrete', 'steel'];
+      const seed = (P.upName || '').length % 3;
+      const rotated = [...order.slice(seed), ...order.slice(0, seed)];
+      const scores = [64, 51, 40];
+      const notes = { rebar: '鉄筋らしき格子パターンを検出（決め打ち）', concrete: 'コンクリート面らしき領域を検出（決め打ち）', steel: '鋼材らしき要素を検出（決め打ち）' };
+      result = rotated.map((trade, i) => ({ trade, score: scores[i], note: notes[trade] }));
+    }
+    P.cands = result;
+    P.chosen = result.length ? result[0].trade : null;
+    P.analyzing = false;
+    render();
+  }, 900);
+}
+
+/* ===== モーダル ===== */
+let M = { imgs: [], idx: 0 };
+function openModal(imgs, idx, title) {
+  M = { imgs, idx };
+  $('#modal').classList.add('on');
+  showModal(title);
+}
+function showModal() {
+  $('#mImg').src = M.imgs[M.idx];
+  $('#mPage').textContent = `${M.idx + 1} / ${M.imgs.length}`;
+  $('#mPrev').disabled = M.idx === 0;
+  $('#mNext').disabled = M.idx >= M.imgs.length - 1;
+}
+function closeModal() { $('#modal').classList.remove('on'); }
+$('#mClose').addEventListener('click', closeModal);
+$('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
+$('#mPrev').addEventListener('click', () => { if (M.idx > 0) { M.idx--; showModal(); } });
+$('#mNext').addEventListener('click', () => { if (M.idx < M.imgs.length - 1) { M.idx++; showModal(); } });
+document.addEventListener('keydown', (e) => {
+  if (!$('#modal').classList.contains('on')) return;
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'ArrowRight' && M.idx < M.imgs.length - 1) { M.idx++; showModal(); }
+  if (e.key === 'ArrowLeft' && M.idx > 0) { M.idx--; showModal(); }
+});
+
+render();
+</script>
+</body>
+</html>

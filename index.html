@@ -1,13 +1,2140 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>safe-site-app</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/svg+xml" href="favicon.svg" />
+<title>事故・品質事例提案くん（デモ）</title>
+<style>
+:root{
+  --bg:#eceff4; --panel:#ffffff; --ink:#17293e; --ink2:#3c4f66; --muted:#68798d; --faint:#9db0c3;
+  --line:#dde4ee; --line2:#e9eef5;
+  --blue:#2563eb; --blue-d:#1d4ed8; --blue-t:#eff6ff;
+  --red:#dc2626; --red-t:#fef2f2; --red-l:#fecaca;
+  --teal:#0f766e; --teal-b:#14b8a6; --teal-t:#f0fdfa; --teal-l:#99e5d8;
+  --amber:#b45309; --amber-t:#fef3c7;
+  --side:#0e2138; --side2:#0a1a2e;
+  --r:14px;
+  --sh:0 1px 2px rgba(16,24,40,.05),0 6px 18px -10px rgba(16,24,40,.14);
+  --sh2:0 2px 4px rgba(16,24,40,.06),0 16px 34px -14px rgba(16,24,40,.25);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP","Yu Gothic",Meiryo,sans-serif;
+  font-size:14px; line-height:1.55; overflow:hidden;
+}
+button{font:inherit; cursor:pointer}
+img{display:block}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#c2cfe0;border-radius:8px;border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:#a3b5cc;border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ===== 全体レイアウト ===== */
+.app{height:100dvh; display:grid; grid-template-columns:230px minmax(0,1fr)}
+.app.closed{grid-template-columns:62px minmax(0,1fr)}
+
+/* ===== サイドバー ===== */
+.side{
+  background:linear-gradient(180deg,var(--side),var(--side2));
+  color:#c9d8ee; display:flex; flex-direction:column; padding:16px 10px 12px; gap:6px;
+}
+.side-head{display:flex; align-items:center; justify-content:space-between; gap:6px; padding:0 4px 12px}
+.app.closed .side-head{flex-direction:column; gap:10px; padding-bottom:10px}
+.brand{display:flex; align-items:center; gap:9px; min-width:0}
+.brand .mark{
+  width:36px;height:36px;border-radius:10px;flex-shrink:0;
+  background:linear-gradient(135deg,#3b82f6,#1d4ed8);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 14px -6px rgba(59,130,246,.8);
+}
+.brand .mark svg{width:22px;height:22px}
+.brand b{display:block; color:#f4f8ff; font-size:15px; line-height:1.2; letter-spacing:.03em; white-space:nowrap}
+.toggle{
+  width:27px;height:27px;border-radius:8px;flex-shrink:0;
+  border:1px solid rgba(201,216,238,.35); background:rgba(148,184,255,.1); color:#dbe6fa;
+  display:inline-flex;align-items:center;justify-content:center; font-size:14px; line-height:1;
+}
+.toggle:hover{background:rgba(148,184,255,.25); color:#fff}
+.nav{display:grid; gap:4px; margin-top:2px}
+.nav button{
+  border:0; border-radius:10px; background:transparent; color:#d7e4f8;
+  padding:10px 11px; display:flex; align-items:center; gap:10px;
+  font-size:13.5px; font-weight:700; text-align:left; white-space:nowrap;
+  transition:background .15s,color .15s;
+}
+.nav button svg{width:17px;height:17px;flex-shrink:0}
+.nav button:hover{background:rgba(148,184,255,.14); color:#fff}
+.nav button.on{background:var(--blue); color:#fff; box-shadow:0 8px 16px -8px rgba(37,99,235,.9)}
+.app.closed .nav button{justify-content:center; padding:10px 0}
+.app.closed .nav button span{display:none}
+.app.closed .brand b{display:none}
+.side-foot{margin-top:auto; padding:10px 6px 2px; color:#7e93b3; font-size:11px; line-height:1.5}
+.app.closed .side-foot{display:none}
+
+/* ===== メイン ===== */
+.main{min-width:0; min-height:0; display:flex; flex-direction:column}
+.view{flex:1; min-height:0; display:none; flex-direction:column; gap:13px; padding:14px 16px 16px}
+.view.on{display:flex}
+.card{
+  background:var(--panel); border:1px solid var(--line); border-radius:var(--r);
+  box-shadow:var(--sh); padding:14px 16px; min-width:0;
+}
+.card h2{margin:0; font-size:16.5px; font-weight:800; display:flex; align-items:center; gap:8px; letter-spacing:.02em}
+.card h2 .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.note{margin:5px 0 0; color:var(--muted); font-size:12px}
+.summary{margin:7px 0 0; color:var(--muted); font-size:12px; font-weight:700}
+
+/* ===== 工程表ビュー ===== */
+.sim{gap:13px}
+.gantt-card{display:flex; flex-direction:column; min-height:0; flex:0 1 auto}
+.gantt-scroll{overflow:auto; border:1px solid var(--line); border-radius:11px; background:#fbfcfe; margin-top:10px; min-height:0}
+.gantt{position:relative; padding:0 10px 8px 0}
+.g-head{
+  position:sticky; top:0; z-index:40; height:32px; background:#f3f6fb;
+  border-bottom:1px solid var(--line); display:grid; grid-template-columns:250px minmax(0,1fr); align-items:center;
+}
+.g-head .lab{
+  position:sticky; left:0; z-index:41; background:#f3f6fb; height:100%;
+  display:flex; align-items:center; padding-left:11px; font-weight:800; color:var(--muted); font-size:12px;
+}
+.g-head .track{position:relative; height:100%}
+.g-head .track span{position:absolute; top:50%; transform:translate(-50%,-50%); color:var(--faint); font-size:11px; font-weight:700; white-space:nowrap}
+.g-rows{
+  display:grid; gap:3px; padding-top:5px;
+  background-image:repeating-linear-gradient(90deg, rgba(100,116,139,.13) 0, rgba(100,116,139,.13) 1px, transparent 1px, transparent 98px);
+  background-position:250px 0; background-repeat:repeat-y;
+}
+.g-row{position:relative; height:26px; border-radius:6px; opacity:.42}
+.g-row:hover{background:rgba(37,99,235,.05); opacity:.7}
+.g-row.act{opacity:1}
+.g-row .nm{
+  position:sticky; left:0; z-index:6; width:242px; height:100%; padding-left:11px;
+  display:flex; align-items:center; font-size:12.5px; font-weight:700; color:var(--ink2);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  background:linear-gradient(90deg,#fbfcfe 88%,rgba(251,252,254,0));
+}
+.g-row:not(.act) .nm{color:var(--faint)}
+.g-row .bar{
+  position:absolute; top:50%; transform:translateY(-50%); height:15px; border-radius:999px;
+  background:linear-gradient(90deg,#60a5fa,#2563eb); box-shadow:0 4px 10px -4px rgba(37,99,235,.55);
+}
+.g-row:not(.act) .bar{background:linear-gradient(90deg,#bccadd,#a9bcd4); box-shadow:none}
+.today{
+  position:absolute; top:32px; bottom:3px; width:2px; background:#ef4444; z-index:50; cursor:ew-resize;
+}
+.today .pill{
+  position:absolute; top:-25px; left:50%; transform:translateX(-50%);
+  background:#ef4444; color:#fff; border-radius:999px; padding:1.5px 8px;
+  font-size:11px; font-weight:800; white-space:nowrap; box-shadow:0 4px 10px -4px rgba(239,68,68,.8);
+}
+.today .dotb{
+  position:absolute; bottom:-6px; left:-6px; width:13px; height:13px; border-radius:50%;
+  background:#ef4444; border:2px solid #fff; box-shadow:0 2px 6px rgba(16,24,40,.3);
+}
+.dual{display:grid; grid-template-columns:1fr 1fr; gap:13px; flex:1; min-height:0}
+.list-card{display:flex; flex-direction:column; min-height:0}
+.list-card .items{margin-top:10px; overflow:auto; flex:1; min-height:0; display:flex; flex-direction:column; gap:11px; padding:2px 3px 2px 1px}
+.empty{
+  border:1.5px dashed #cbd5e1; border-radius:11px; padding:13px 15px; margin-top:10px;
+  color:var(--muted); font-size:12.5px; line-height:1.65; background:#f8fafc;
+}
+
+/* ===== 事例カード ===== */
+.case{
+  border:1px solid var(--line); border-radius:12px; background:#fff; padding:11px 12px;
+  display:grid; grid-template-columns:158px minmax(0,1fr); gap:12px; align-items:start; flex-shrink:0;
+  transition:box-shadow .15s,border-color .15s;
+}
+.case:hover{border-color:#c3d2e8; box-shadow:var(--sh2)}
+.case .thumb img{width:100%; max-height:190px; object-fit:contain; border:1px solid var(--line2); border-radius:9px; background:#f8fafc; cursor:zoom-in}
+.case .body{display:grid; gap:4px; align-content:start; min-width:0}
+.meta{display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:11.5px; font-weight:800; color:var(--blue)}
+.chip{background:var(--teal-t); color:var(--teal); border:1px solid var(--teal-l); border-radius:999px; padding:1.5px 9px; font-size:11.5px}
+.chip.red{background:var(--red-t); color:var(--red); border-color:var(--red-l)}
+.cid{color:var(--faint); font-weight:700}
+.facts{color:var(--muted); font-weight:700; font-size:12px; display:flex; align-items:center; flex-wrap:wrap; gap:7px; margin:0}
+.sev{border-radius:999px; padding:1px 8px; font-size:11px; font-weight:800}
+.sev-high{background:#fee2e2; color:#b91c1c}
+.sev-mid{background:var(--amber-t); color:var(--amber)}
+.sev-low{background:#e2e8f0; color:#475569}
+.case h3{margin:2px 0 1px; font-size:15px; font-weight:800; line-height:1.4}
+.case p{margin:0; color:var(--ink2); font-size:12.8px; line-height:1.65}
+.detail{display:none; gap:4px; align-content:start}
+.case.open .detail{display:grid}
+.tags{display:flex; flex-wrap:wrap; gap:5px; margin-top:2px}
+.tags span{background:#eef2f7; border-radius:999px; padding:2.5px 8px; font-size:11px; font-weight:600; color:#44546a}
+.cm{background:var(--blue-t); border:1px solid #d7e6fd; border-left:4px solid var(--blue); border-radius:9px; padding:7px 10px; margin-top:2px}
+.case.quality .cm{background:var(--teal-t); border-color:#c9efe7; border-left-color:var(--teal-b)}
+.fold{
+  justify-self:start; margin-top:5px; border:1px solid var(--line); background:#f8fafc; color:var(--blue);
+  border-radius:999px; padding:4.5px 12px; font-size:12px; font-weight:800;
+  display:inline-flex; align-items:center; gap:4px;
+}
+.fold:hover{background:var(--blue-t); border-color:#b9d0f7}
+.case.quality .fold{color:var(--teal)}
+.case.quality .fold:hover{background:var(--teal-t); border-color:var(--teal-l)}
+.imgcount{color:var(--blue); font-size:11.5px; font-weight:700}
+
+/* ===== 写真で判別ビュー ===== */
+.photo-view{flex-direction:row; align-items:stretch}
+.photo-rail{width:372px; flex-shrink:0; display:flex; flex-direction:column; min-height:0}
+.photo-rail .card{flex:1; overflow:auto; display:flex; flex-direction:column; gap:11px}
+.photo-results{flex:1; min-width:0; overflow:auto; display:flex; flex-direction:column; gap:13px; padding-right:2px}
+.photo-results .list-card{flex:0 0 auto}
+.photo-results .items{overflow:visible; flex:none}
+.picker{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+.pthumb{
+  border:2px solid var(--line); border-radius:11px; background:#fff; padding:6px;
+  display:grid; gap:5px; justify-items:center; font-size:12px; font-weight:700; color:var(--ink2);
+  transition:border-color .15s, box-shadow .15s;
+}
+.pthumb:hover{border-color:#9db9e8}
+.pthumb.sel{border-color:var(--teal-b); box-shadow:0 0 0 2px rgba(20,184,166,.3)}
+.pthumb img{width:100%; height:76px; object-fit:cover; border-radius:7px}
+.pthumb.up{border-style:dashed; color:var(--muted); place-items:center; align-content:center; min-height:104px; font-size:24px}
+.pthumb.up small{font-size:12px; font-weight:700}
+.preview{border:1px solid var(--line); border-radius:11px; background:#f8fafc; padding:7px}
+.preview img{width:100%; max-height:250px; object-fit:contain; border-radius:8px; margin:0 auto}
+.btn{
+  border:0; border-radius:10px; background:linear-gradient(135deg,#2f7df6,#1d4ed8); color:#fff;
+  padding:10px 18px; font-size:13.5px; font-weight:800; display:inline-flex; align-items:center; gap:7px;
+  box-shadow:0 8px 18px -8px rgba(37,99,235,.8);
+}
+.btn:hover:not(:disabled){filter:brightness(1.08)}
+.btn:disabled{opacity:.45; cursor:not-allowed; box-shadow:none}
+.hint{color:var(--faint); font-size:12px; font-weight:600}
+.spin{display:inline-block; animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.cands{display:grid; gap:6px; border-top:1px solid var(--line2); padding-top:10px}
+.cands h3{margin:0 0 2px; font-size:13.5px; font-weight:800}
+.cand{
+  border:1.5px solid var(--line); background:#fff; border-radius:10px; padding:8px 11px;
+  display:grid; grid-template-columns:106px minmax(50px,1fr) 40px; align-items:center; gap:10px; text-align:left; width:100%;
+}
+.cand .nm{white-space:nowrap}
+.cand:hover{border-color:#9db9e8}
+.cand.sel{border-color:var(--teal-b); background:var(--teal-t)}
+.cand .nm{font-weight:800; font-size:13px}
+.cand .barbg{height:8px; border-radius:999px; background:#e6ebf2; overflow:hidden}
+.cand .barbg i{display:block; height:100%; border-radius:999px; background:linear-gradient(90deg,#2dd4bf,#0f766e)}
+.cand .sc{font-weight:800; color:var(--teal); text-align:right}
+.cand .nt{grid-column:1/-1; color:var(--muted); font-size:11.5px}
+.wait{
+  flex:1; display:flex; align-items:center; justify-content:center; text-align:center;
+  color:var(--muted); font-size:13.5px; line-height:1.8; border:1.5px dashed #cbd5e1; border-radius:var(--r); background:#f8fafc; padding:30px;
+}
+
+/* ===== ライブラリビュー ===== */
+.lib{flex-direction:row; align-items:stretch}
+.lib-left{flex:1.35; min-width:0; display:flex; flex-direction:column; min-height:0}
+.lib-left .card{flex:1; display:flex; flex-direction:column; min-height:0}
+.lib-grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; overflow:auto; min-height:0; margin-top:10px; padding:2px 3px 2px 1px; align-content:start}
+.lib-card{
+  border:1px solid var(--line); background:#fff; border-radius:12px; padding:10px 11px; text-align:left;
+  transition:border-color .15s, box-shadow .15s, background .15s;
+}
+.lib-card:hover{border-color:#9db9e8; box-shadow:var(--sh)}
+.lib-card.sel{border-color:var(--blue); background:var(--blue-t); box-shadow:0 0 0 1px var(--blue)}
+.lib-card h3{margin:3px 0 2px; font-size:13.5px; font-weight:800; line-height:1.45}
+.lib-card p{margin:0; color:var(--ink2); font-size:12px; line-height:1.55; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+.lib-right{flex:1; min-width:0; display:flex; flex-direction:column; min-height:0}
+.lib-right .card{flex:1; display:flex; flex-direction:column; min-height:0}
+.lib-right .items{margin-top:10px; overflow:auto; flex:1; min-height:0; display:flex; flex-direction:column; gap:11px; padding:2px 3px 2px 1px}
+.chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:9px}
+.chips button{border:1px solid var(--line); background:#fff; color:var(--ink2); border-radius:999px; padding:5.5px 12px; font-size:12.5px; font-weight:700}
+.chips button:hover{border-color:var(--teal-b); color:var(--teal)}
+.chips button.on{background:var(--teal); border-color:var(--teal); color:#fff}
+
+/* ===== モーダル ===== */
+.modal{position:fixed; inset:0; background:rgba(5,10,20,.78); backdrop-filter:blur(3px); display:none; align-items:center; justify-content:center; z-index:90; padding:18px}
+.modal.on{display:flex}
+.modal-in{width:min(1150px,95vw); max-height:92vh; background:#0a1327; border:1px solid #2c3c62; border-radius:13px; padding:12px; display:grid; gap:8px}
+.modal-bar{display:flex; align-items:center; justify-content:center; gap:8px}
+.modal-bar .pg{min-width:70px; text-align:center; color:#dce7ff; font-weight:700; font-size:13px}
+.mnav{width:33px; height:33px; border-radius:8px; border:1px solid #425784; background:#142544; color:#f5f7ff; display:inline-flex; align-items:center; justify-content:center; font-size:15px}
+.mnav:disabled{opacity:.35; cursor:not-allowed}
+.mclose{justify-self:end; border:1px solid #425784; border-radius:8px; background:#142544; color:#f5f7ff; padding:5px 11px; font-size:12.5px}
+.modal-in img{width:100%; max-height:calc(92vh - 70px); object-fit:contain; background:#fff; border-radius:9px}
+
+@media (max-width:1080px){
+  body{overflow:auto}
+  .app,.app.closed{grid-template-columns:1fr; height:auto; min-height:100dvh}
+  .side{flex-direction:row; flex-wrap:wrap; align-items:center}
+  .nav{display:flex; flex-wrap:wrap}
+  .side-foot{display:none}
+  .view{padding:10px}
+  .dual{grid-template-columns:1fr}
+  .photo-view,.lib{flex-direction:column}
+  .photo-rail{width:100%}
+  .case{grid-template-columns:1fr}
+  .lib-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <aside class="side">
+    <div class="side-head">
+      <div class="brand">
+        <span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6a8 8 0 0 1 13.5-5.5M22 18a8 8 0 0 1-13.5 5.5"/><path d="M8.5 12h7M12 8.5v7"/></svg></span>
+        <b>事故・品質事例<br/>提案くん</b>
+      </div>
+      <button class="toggle" id="sideToggle" aria-label="サイドバーを開閉">‹</button>
+    </div>
+    <nav class="nav" id="nav">
+      <button data-tab="sim" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span>工程表</span></button>
+      <button data-tab="photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span>写真で判別</span></button>
+      <button data-tab="lib-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><span>災害事例ライブラリ</span></button>
+      <button data-tab="lib-q"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg><span>不具合事例ライブラリ</span></button>
+    </nav>
+    <div class="side-foot">安全（災害）事例 9件<br/>品質不具合事例 60件（3工種）<br/>デモ版：写真判別は決め打ち</div>
+  </aside>
+  <main class="main" id="main"></main>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-in">
+    <div class="modal-bar">
+      <button class="mnav" id="mPrev">‹</button>
+      <span class="pg" id="mPage"></span>
+      <button class="mnav" id="mNext">›</button>
+    </div>
+    <button class="mclose" id="mClose">閉じる</button>
+    <img id="mImg" alt="拡大画像" />
+  </div>
+</div>
+
+<script>
+const DATA = {
+ "TRADES": {
+  "rebar": {
+   "id": "rebar",
+   "label": "鉄筋工事",
+   "short": "鉄筋"
+  },
+  "concrete": {
+   "id": "concrete",
+   "label": "コンクリート工事",
+   "short": "コンクリート"
+  },
+  "steel": {
+   "id": "steel",
+   "label": "鉄骨工事",
+   "short": "鉄骨"
+  }
+ },
+ "CASES": [
+  {
+   "id": "R1",
+   "trade": "rebar",
+   "illust": 1,
+   "title": "梁側面のかぶり不足（スペーサー不足＋打設時の寄り）",
+   "type": "かぶり不足",
+   "severity": "重大",
+   "foundAt": "配筋検査",
+   "part": "地中梁・基礎梁",
+   "description": "配筋検査で梁側面のかぶりを実測したところ、設計60mmに対し25mm程度しかない箇所が連続していた。スペーサーの間隔が施工要領書より広く、打設圧で鉄筋が型枠側へ寄っていた。",
+   "cause": "スペーサー配置基準が作業員まで具体化されておらず、個数も不足。配筋完了時の自社確認が目視中心で実測していなかった。",
+   "correction": "鉄筋位置を修正し、スペーサーを増設して再検査。かぶり不足が残る箇所は、耐久性の観点から監理者の判定を受けて記録した。",
+   "countermeasure": "スペーサー配置を図示した標準図を配筋図に添付し、配筋完了写真は「かぶり実測値が写る」撮り方に統一する。",
+   "keywords": [
+    "かぶり",
+    "スペーサー",
+    "耐久性"
+   ]
+  },
+  {
+   "id": "R2",
+   "trade": "rebar",
+   "illust": 2,
+   "title": "柱主筋の本数不足（加工帳の拾いミス）",
+   "type": "配筋ミス",
+   "severity": "重大",
+   "foundAt": "配筋検査",
+   "part": "柱",
+   "description": "配筋検査で柱主筋を数えたところ、設計より1本不足。加工帳の拾い段階で1本少なく発注・加工されており、結束時にも誰も本数を数えていなかった。",
+   "cause": "加工図と配筋図の照合が一人作業で、ダブルチェックがなかった。柱は「結束前に本数を数える」手順が標準化されていなかった。",
+   "correction": "不足筋を追加挿入し、継手位置をずらして対応（構造監理者の承認取得）。同タイプの柱は全数再カウントした。",
+   "countermeasure": "加工帳チェックは二人制にする。柱・梁の主筋は結束前に声出しで本数確認し、確認済みタグを付ける。",
+   "keywords": [
+    "本数不足",
+    "加工帳",
+    "照合"
+   ]
+  },
+  {
+   "id": "R3",
+   "trade": "rebar",
+   "illust": 2,
+   "title": "梁主筋の定着長さ不足（折り曲げ加工の取り違い）",
+   "type": "定着・継手不良",
+   "severity": "重大",
+   "foundAt": "配筋検査",
+   "part": "梁",
+   "description": "柱への梁主筋の定着長さが所要長さに届いていない箇所を発見。折り曲げ加工の寸法の取り方が加工場と現場で食い違っていた。",
+   "cause": "加工図の定着寸法の読み取りミス。初回加工品の検測（ファーストチェック）をしていなかった。",
+   "correction": "不足分は機械式定着金物で補う案を構造監理者が承認し、交換・追加を実施。",
+   "countermeasure": "加工開始時に初品の寸法検測を行い、結果を加工場と現場で共有する。定着寸法は加工図に赤字で明示する。",
+   "keywords": [
+    "定着長さ",
+    "加工図",
+    "初品検測"
+   ]
+  },
+  {
+   "id": "R4",
+   "trade": "rebar",
+   "illust": 3,
+   "title": "ガス圧接の外観不良と、引張試験未実施のまま打設日を迎えた",
+   "type": "定着・継手不良",
+   "severity": "重大",
+   "foundAt": "打設前日",
+   "part": "柱・梁 主筋継手",
+   "description": "圧接部の膨らみ不足と偏心が散見され、さらに外観検査・引張（超音波）試験の手配自体が漏れており、未試験のまま打設予定日になっていた。",
+   "cause": "継手試験が工程表のどこにもゲートとして組み込まれておらず、担当者の段取り任せになっていた。",
+   "correction": "打設を中止して試験を実施。不合格部は切断・再圧接し、再試験で合格を確認してから打設した。",
+   "countermeasure": "「継手試験合格」を打設の前提条件として工程表に明記する。試験結果が出るまで打設日を確定しない運用にする。",
+   "keywords": [
+    "ガス圧接",
+    "試験漏れ",
+    "打設ゲート"
+   ]
+  },
+  {
+   "id": "R5",
+   "trade": "rebar",
+   "illust": 2,
+   "title": "スラブ上端筋の踏み荒らしによる沈下",
+   "type": "かぶり不足",
+   "severity": "中",
+   "foundAt": "打設前自主検査",
+   "part": "スラブ",
+   "description": "打設前日の他工種の資材搬入でスラブ上端筋が踏まれて沈下し、かぶり過大（有効せいの不足）になっていた。打設前自主検査の実測で発覚。",
+   "cause": "搬入動線が配筋の真上を通る計画で、歩行用足場板も敷かれていなかった。支持金物（馬）の間隔も広かった。",
+   "correction": "沈下した鉄筋を持ち上げて修正し、支持金物を増設。打設当日の朝に再確認した。",
+   "countermeasure": "打設前日の搬入動線は配筋上を避けて計画する。やむを得ない場合は足場板を敷き、立入りの段取りを朝礼で共有する。",
+   "keywords": [
+    "踏み荒らし",
+    "スラブ",
+    "動線計画"
+   ]
+  },
+  {
+   "id": "R6",
+   "trade": "rebar",
+   "illust": 2,
+   "title": "スラブ開口の補強筋入れ忘れ（スリーブ位置変更の未伝達）",
+   "type": "配筋ミス",
+   "severity": "中",
+   "foundAt": "打設後（設備工事時）",
+   "part": "スラブ設備開口",
+   "description": "設備スリーブの位置変更が鉄筋側に伝わっておらず、変更後の開口周りに補強筋が入っていなかった。打設後に設備工事が入って発覚。",
+   "cause": "スリーブ図の改訂が図面配布だけで終わり、配筋図との重ね合わせ確認の場がなかった。",
+   "correction": "開口周囲をはつり、補強筋をあと挿入して無収縮モルタルを充填（監理者承認のうえ実施）。",
+   "countermeasure": "打設1週間前に、スリーブ図と配筋図を重ねた確認を設備・鉄筋・監督の3者で行う。",
+   "keywords": [
+    "開口補強",
+    "スリーブ",
+    "情報伝達"
+   ]
+  },
+  {
+   "id": "R7",
+   "trade": "rebar",
+   "illust": 1,
+   "title": "鉄筋径の取り違え（D19とD22の混在）",
+   "type": "配筋ミス",
+   "severity": "中",
+   "foundAt": "配筋検査",
+   "part": "壁・スラブ",
+   "description": "似た径の鉄筋が材料置場で表示なしに混載され、配筋にも一部混在していた。配筋検査で径を実測して発覚。",
+   "cause": "受入時の径確認と、径ごとの置場区分・結束札の運用がなかった。",
+   "correction": "混在範囲を特定して組み直し。同ロットの材料は全数径確認した。",
+   "countermeasure": "径ごとに置場を色分けし、結束ごとに径表示札を付ける。受入検収で径をサンプル実測する。",
+   "keywords": [
+    "径違い",
+    "材料管理",
+    "受入検収"
+   ]
+  },
+  {
+   "id": "R8",
+   "trade": "rebar",
+   "illust": 2,
+   "title": "柱フープ間隔のばらつき（間隔過大の区間）",
+   "type": "配筋ミス",
+   "severity": "中",
+   "foundAt": "配筋検査",
+   "part": "柱",
+   "description": "フープ間隔が設計125mmのところ、実測180mm前後の区間があった。墨出しなしで感覚で結束しており、作業の急ぎも重なっていた。",
+   "cause": "ピッチ墨のマーキング手順がなく、結束速度優先の作業になっていた。",
+   "correction": "間隔過大の区間にフープを追加挿入し、全柱のピッチを再実測した。",
+   "countermeasure": "柱は主筋にピッチ墨を入れてから結束する。結束完了時にピッチ実測を1柱ずつ記録する。",
+   "keywords": [
+    "フープ",
+    "ピッチ",
+    "墨出し"
+   ]
+  },
+  {
+   "id": "R9",
+   "trade": "rebar",
+   "illust": 3,
+   "title": "あばら筋フック角度の不良（135°が90°で量産）",
+   "type": "加工不良",
+   "severity": "中",
+   "foundAt": "材料受入時",
+   "part": "梁 あばら筋",
+   "description": "加工機の設定ミスで、あばら筋のフックが135°のところ90°のものが1ロット分量産されていた。受入時の抜き取り確認で発覚。",
+   "cause": "加工条件の変更時に初品確認を省略していた。現場側の受入確認項目にも角度が入っていなかった。",
+   "correction": "該当ロットは全数交換。納入済みの他ロットも角度を再確認した。",
+   "countermeasure": "加工ロットごとに初品の角度・寸法検測を記録し、現場受入確認の項目にフック角度を加える。",
+   "keywords": [
+    "フック角度",
+    "加工",
+    "ロット管理"
+   ]
+  },
+  {
+   "id": "R10",
+   "trade": "rebar",
+   "illust": 1,
+   "title": "浮き錆・泥付着の鉄筋を清掃せず配筋",
+   "type": "付着・耐久性",
+   "severity": "軽微",
+   "foundAt": "配筋検査",
+   "part": "基礎・壁",
+   "description": "雨ざらし保管で浮き錆が進み、泥の付着した鉄筋がそのまま配筋されていた。付着性能と耐久性への影響が懸念される状態。",
+   "cause": "保管時に地面から浮かせる・シートで覆う等の基本養生ができておらず、配筋前の清掃確認もなかった。",
+   "correction": "ワイヤブラシで清掃し、程度の重いものは交換。保管方法を是正した。",
+   "countermeasure": "材料保管は角材で浮かせてシート養生を標準とする。配筋前の清掃確認を自主検査の項目に入れる。",
+   "keywords": [
+    "錆",
+    "保管養生",
+    "付着"
+   ]
+  },
+  {
+   "id": "C1",
+   "trade": "concrete",
+   "illust": 1,
+   "title": "壁脚部のジャンカ（締固め不足＋モルタル漏れ）",
+   "type": "充填不良",
+   "severity": "重大",
+   "foundAt": "脱型後",
+   "part": "壁・柱脚部",
+   "description": "脱型後に壁脚部へジャンカが集中して発生。バイブレータのかけ忘れ区間があり、型枠目地からのモルタル漏れも重なっていた。",
+   "cause": "締固めの担当範囲と挿入間隔が打設計画で具体化されておらず、型枠の目地処理と清掃確認も不足していた。",
+   "correction": "不良部をはつり取り、断面修復材で補修。範囲が広い箇所は監理者の立会いで補修方法を決めた。",
+   "countermeasure": "打設計画にバイブレータの挿入間隔・担当区画を図示する。型枠組立後の清掃と目地の止水確認を打設前チェックに入れる。",
+   "keywords": [
+    "ジャンカ",
+    "締固め",
+    "バイブレータ"
+   ]
+  },
+  {
+   "id": "C2",
+   "trade": "concrete",
+   "illust": 2,
+   "title": "ポンプ故障によるコールドジョイント",
+   "type": "打継ぎ不良",
+   "severity": "重大",
+   "foundAt": "打設中",
+   "part": "スラブ・梁",
+   "description": "打設中にポンプが故障し、打重ね時間が2時間を超えて計画外の継目が発生。後日、そのラインが漏水経路になっていることが分かった。",
+   "cause": "予備ポンプの手配がなく、生コン工場との緊急連絡・代替手配の段取りも決まっていなかった。",
+   "correction": "継目部は監理者と協議し、止水処理と記録を行った。以後の打設では打重ね時間の管理表を導入。",
+   "countermeasure": "打設計画に予備ポンプと工場の待機連絡網を明記する。打重ね時間の上限を朝礼で共有し、経過時間を打設責任者が管理する。",
+   "keywords": [
+    "コールドジョイント",
+    "ポンプ故障",
+    "打重ね時間"
+   ]
+  },
+  {
+   "id": "C3",
+   "trade": "concrete",
+   "illust": 3,
+   "title": "初期ひび割れの多発（夏季スラブ、養生開始の遅れ）",
+   "type": "ひび割れ",
+   "severity": "中",
+   "foundAt": "打設翌日",
+   "part": "スラブ",
+   "description": "夏季のスラブ打設直後、風と乾燥で表面にプラスチック収縮ひび割れが多発。仕上げ後の散水・シート養生の開始が遅れていた。",
+   "cause": "養生の開始タイミングが「仕上げ完了後」の曖昧な指示で、担当も決まっていなかった。",
+   "correction": "ひび割れ幅を全数測定して記録し、幅の大きいものは注入補修。以後の打設では養生を即時開始に変更。",
+   "countermeasure": "打設直後からの養生手順と担当を打設計画に明記する。気温・風速の条件で打設時間帯の調整も検討する。",
+   "keywords": [
+    "初期ひび割れ",
+    "養生",
+    "夏季施工"
+   ]
+  },
+  {
+   "id": "C4",
+   "trade": "concrete",
+   "illust": 1,
+   "title": "型枠のはらみによる壁厚の許容外れ",
+   "type": "寸法不良",
+   "severity": "中",
+   "foundAt": "脱型後",
+   "part": "壁",
+   "description": "打設速度が速すぎて型枠がはらみ、壁厚が設計寸法の許容を外れた。打設中は型枠の変位を見張る担当がいなかった。",
+   "cause": "打設速度（上昇速度）の上限が計画に示されず、セパレータ・端太材の配置も経験任せだった。",
+   "correction": "はらみ量を実測し、はつり・増し打ちの要否を監理者が判定。仕上げで吸収できる範囲は記録のうえ処理した。",
+   "countermeasure": "打設計画に上昇速度の上限を設定し、打設中は型枠の変位見張り担当を置く。",
+   "keywords": [
+    "型枠はらみ",
+    "打設速度",
+    "寸法"
+   ]
+  },
+  {
+   "id": "C5",
+   "trade": "concrete",
+   "illust": 2,
+   "title": "打継ぎ面のレイタンス未処理",
+   "type": "打継ぎ不良",
+   "severity": "中",
+   "foundAt": "次回打設の前日",
+   "part": "壁・スラブ打継ぎ部",
+   "description": "打継ぎ面のレイタンス除去をしないまま次回打設の段取りが進んでいた。打設前日の確認で発覚し、高圧洗浄で処理して事なきを得た。",
+   "cause": "打継ぎ処理が「誰が・いつやるか」の作業として工程に組み込まれておらず、打設側の関心も低かった。",
+   "correction": "高圧洗浄でレイタンスを除去し、処理後の状態を写真で確認してから打設した。",
+   "countermeasure": "打継ぎ処理を打設翌日の作業として工程表に明記し、処理前後の写真確認を打設の前提条件にする。",
+   "keywords": [
+    "レイタンス",
+    "打継ぎ",
+    "表面処理"
+   ]
+  },
+  {
+   "id": "C6",
+   "trade": "concrete",
+   "illust": 2,
+   "title": "受入検査不合格ロットの加水圧力（返却して工程が半日遅延）",
+   "type": "受入管理",
+   "severity": "中",
+   "foundAt": "受入検査時",
+   "part": "打設全般",
+   "description": "到着遅延でスランプが低下したロットについて、現場で加水を求める声が出たが、受入検査不合格として返却。打設は半日遅れたが、品質上の問題は回避できた「起きかけた」事例。",
+   "cause": "輸送時間の見込み違いと、打設ペースに対する工場出荷の間隔調整不足。",
+   "correction": "当該ロットは返却し、出荷間隔を見直して打設を再開。遅延は関係者で協議し、工程を組み替えた。",
+   "countermeasure": "受入検査不合格は理由を問わず返却するルールを朝礼で繰り返し共有する。出荷間隔は当日の気温と輸送時間で前日に決める。",
+   "keywords": [
+    "加水",
+    "受入検査",
+    "スランプ"
+   ]
+  },
+  {
+   "id": "C7",
+   "trade": "concrete",
+   "illust": 3,
+   "title": "供試体強度未確認での早期脱型（冬季）",
+   "type": "養生・脱型不良",
+   "severity": "重大",
+   "foundAt": "脱型直後",
+   "part": "壁・梁側",
+   "description": "冬季施工で、供試体の強度確認前に型枠を外してしまい、表面の凍害と強度不足の不安が生じた。工程を前倒ししたい意図が背景にあった。",
+   "cause": "脱型の判断基準（強度確認）が手順化されておらず、寒中養生計画も形だけになっていた。",
+   "correction": "コア採取と非破壊試験で強度を確認し、所要強度を満たすことを記録。以後の脱型は強度確認を必須とした。",
+   "countermeasure": "脱型は供試体強度の確認をゲートにする。冬季は寒中養生計画（加熱・保温）を打設計画とセットで承認する。",
+   "keywords": [
+    "早期脱型",
+    "強度確認",
+    "寒中養生"
+   ]
+  },
+  {
+   "id": "C8",
+   "trade": "concrete",
+   "illust": 2,
+   "title": "打込み高さ過大による材料分離",
+   "type": "充填不良",
+   "severity": "中",
+   "foundAt": "脱型後",
+   "part": "柱",
+   "description": "柱への打込みで自由落下高さが2mを超え、粗骨材が下部に偏ってジャンカも併発。シュート等の打込み器具を使っていなかった。",
+   "cause": "打込み器具の配置が打設計画に図示されておらず、現場の判断で「落とし込み」になっていた。",
+   "correction": "該当部は超音波で内部状態を確認し、必要範囲を補修。以後は器具なしの打込みを禁止した。",
+   "countermeasure": "打設計画書に打込み器具（トレミー・シュート）の配置を図示し、打設開始前に配置を写真で確認する。",
+   "keywords": [
+    "材料分離",
+    "落下高さ",
+    "打込み器具"
+   ]
+  },
+  {
+   "id": "C9",
+   "trade": "concrete",
+   "illust": 2,
+   "title": "ポンプ配管詰まりによる打設中断と再開後の品質ばらつき",
+   "type": "打設管理",
+   "severity": "中",
+   "foundAt": "打設中",
+   "part": "梁・スラブ",
+   "description": "配管の詰まりで打設が中断。再開時に先行モルタルの処理手順が曖昧で、再開直後の打設部の品質にばらつきが出た。",
+   "cause": "配管径・総距離の事前検討が不足し、中断・再開時の手順も決まっていなかった。",
+   "correction": "詰まり箇所の前後をテストハンマー等で確認し、記録。以後の打設では再開手順を計画に追記した。",
+   "countermeasure": "配管計画（径・距離・継手数）を打設前に検討し、中断時の対応と再開手順を打設計画に明記する。",
+   "keywords": [
+    "配管詰まり",
+    "圧送",
+    "再開手順"
+   ]
+  },
+  {
+   "id": "C10",
+   "trade": "concrete",
+   "illust": 3,
+   "title": "スラブの不陸（レベル管理不足で後工程に影響）",
+   "type": "寸法不良",
+   "severity": "軽微",
+   "foundAt": "仕上げ工事時",
+   "part": "スラブ",
+   "description": "スラブ面に±10mmを超える不陸があり、床仕上げ工事で調整厚が増えて手間と費用の協議になった。打設中のレベル確認が粗かった。",
+   "cause": "レベル確認のポイントが少なく、均し担当と検測担当が同一でチェックが効いていなかった。",
+   "correction": "不陸部は削り・レベラーで調整し、費用負担は関係者で協議して決めた。",
+   "countermeasure": "打設中のレベル確認ポイントを増やし、均しと検測の担当を分ける。打設翌日に不陸を実測して記録する。",
+   "keywords": [
+    "不陸",
+    "レベル",
+    "仕上げ影響"
+   ]
+  },
+  {
+   "id": "S1",
+   "trade": "steel",
+   "illust": 1,
+   "title": "現場溶接継手の食い違い（許容3mmに対し5mm前後）",
+   "type": "溶接継手不良",
+   "severity": "重大",
+   "foundAt": "行政検査",
+   "part": "柱継手",
+   "description": "柱の現場溶接継手に、許容3mmを超える5mm前後の食い違いが少なからずあった。監理者・施工者とも把握しておらず、行政の検査で初めて発見された。",
+   "cause": "建方後の継手検測が全数ではなく、溶接前の仮付け段階での確認手順もなかった。",
+   "correction": "食い違い量を全数調査し、補強・手直しの方法を構造監理者が1件ずつ判定して実施した。",
+   "countermeasure": "継手は溶接前に全数検測して記録する。食い違いの許容値を建方班の朝礼資料に明記する。",
+   "keywords": [
+    "食い違い",
+    "現場溶接",
+    "全数検測"
+   ]
+  },
+  {
+   "id": "S2",
+   "trade": "steel",
+   "illust": 2,
+   "title": "高力ボルトの締め忘れ（本締め未実施の継手）",
+   "type": "ボルト締結不良",
+   "severity": "重大",
+   "foundAt": "仕上げ工程時",
+   "part": "梁継手",
+   "description": "本締めが終わっていない継手が残っており、後工程の作業員が気付いて発覚。締付け後のマーキングが徹底されておらず、完了の判別ができなかった。",
+   "cause": "締付け完了のマーキング（合いマーク）ルールが班ごとにばらばらで、完了申告の仕組みもなかった。",
+   "correction": "全継手のトルク確認を行い、未締結部を本締め。結果を継手台帳に記録した。",
+   "countermeasure": "締付け後は合いマークを必須とし、班ごとの完了申告＋監督の抜き取り確認をセットにする。",
+   "keywords": [
+    "締め忘れ",
+    "高力ボルト",
+    "マーキング"
+   ]
+  },
+  {
+   "id": "S3",
+   "trade": "steel",
+   "illust": 2,
+   "title": "高力ボルトの共回りによる締付け不足",
+   "type": "ボルト締結不良",
+   "severity": "中",
+   "foundAt": "締付け検査",
+   "part": "梁継手",
+   "description": "ナットとボルトが共回りして所定の締付け力に達していない継手があった。締付け検査のトルク確認で発覚。",
+   "cause": "座金の向きの誤りと、ボルトセットの保管中の汚れ・錆。締付け機の校正記録も残っていなかった。",
+   "correction": "該当ボルトセットは交換して再締付け。保管状態の悪いセットは使用を止めた。",
+   "countermeasure": "ボルトセットは雨・泥を避けて保管し、座金の向きを締付け前の確認項目にする。締付け機は校正記録を現場に備える。",
+   "keywords": [
+    "共回り",
+    "トルク",
+    "ボルト保管"
+   ]
+  },
+  {
+   "id": "S4",
+   "trade": "steel",
+   "illust": 3,
+   "title": "アンカーボルトの位置ずれと出の不足",
+   "type": "建方精度",
+   "severity": "重大",
+   "foundAt": "建方直前",
+   "part": "柱脚",
+   "description": "基礎配筋との干渉でアンカーボルトの位置がずれ、長さの出も不足。現場ではベースプレートの孔を広げて合わせようとする動きがあった。",
+   "cause": "アンカーのテンプレート固定が弱く、コンクリート打設中の見張りもいなかったため、打設圧で動いていた。",
+   "correction": "孔拡大＋座金追加の案について構造監理者の承認を取得してから実施し、経緯を記録した（無承認の加工は行わない）。",
+   "countermeasure": "アンカーセット時はテンプレートで固定し、打設前に位置を検測、打設中は見張りを置く。",
+   "keywords": [
+    "アンカーボルト",
+    "柱脚",
+    "テンプレート"
+   ]
+  },
+  {
+   "id": "S5",
+   "trade": "steel",
+   "illust": 1,
+   "title": "建入れ精度の累積誤差（上層で柱の倒れが許容超過）",
+   "type": "建方精度",
+   "severity": "中",
+   "foundAt": "建方検査",
+   "part": "柱（節ごと）",
+   "description": "節ごとの建入れ調整が小さくずれ続け、上層で柱の倒れが許容を超えた。1節ごとの測定記録が残っておらず、累積に気付けなかった。",
+   "cause": "節ごとの建入れ測定と記録が手順化されておらず、「次節で直す」判断が繰り返されていた。",
+   "correction": "ワイヤーとターンバックルで再調整し、残りの節の建方計画に調整代を織り込んだ。",
+   "countermeasure": "節ごとに建入れを測定して記録し、累積誤差を前提に調整代を確保する。測定結果は建方図に転記する。",
+   "keywords": [
+    "建入れ",
+    "累積誤差",
+    "精度管理"
+   ]
+  },
+  {
+   "id": "S6",
+   "trade": "steel",
+   "illust": 1,
+   "title": "完全溶込み溶接の内部欠陥（UT検査不合格）",
+   "type": "溶接継手不良",
+   "severity": "重大",
+   "foundAt": "UT検査",
+   "part": "柱・梁溶接部",
+   "description": "超音波探傷検査で、融合不良とスラグ巻き込みによる内部欠陥が見つかり不合格。外観では分からない欠陥だった。",
+   "cause": "溶接条件（電流・速度）が施工要領書通りでない場面があり、開先面の清掃も不十分だった。",
+   "correction": "欠陥部をガウジングで除去して再溶接し、再UTで合格を確認した。",
+   "countermeasure": "溶接施工要領書（WPS）の条件遵守を溶接前の確認項目にし、開先面の清掃確認と溶接士の技量確認試験を記録する。",
+   "keywords": [
+    "UT検査",
+    "内部欠陥",
+    "WPS"
+   ]
+  },
+  {
+   "id": "S7",
+   "trade": "steel",
+   "illust": 1,
+   "title": "類似部材の符号取り違え（梁の左右入れ違い）",
+   "type": "部材管理",
+   "severity": "中",
+   "foundAt": "建方中",
+   "part": "梁",
+   "description": "符号の似た梁を左右取り違えて吊り込み、孔が合わずに発覚。吊り戻して入れ替えたため半日の遅延が出た。",
+   "cause": "搬入時の符号照合が検収と分離しておらず、類似符号の見分け策もなかった。",
+   "correction": "部材を入れ替えて建方を再開。同符号系統の部材は全数再照合した。",
+   "countermeasure": "搬入時に符号を建方図と照合してマーキングする。類似符号は色分けシールで区別する。",
+   "keywords": [
+    "符号",
+    "部材照合",
+    "建方図"
+   ]
+  },
+  {
+   "id": "S8",
+   "trade": "steel",
+   "illust": 2,
+   "title": "耐火被覆の付着不良（被覆前の下地処理不足）",
+   "type": "被覆不良",
+   "severity": "中",
+   "foundAt": "被覆工事の自主検査",
+   "part": "柱・梁 耐火被覆",
+   "description": "吹付け耐火被覆の一部に付着不良があった。被覆前の錆・付着物の除去が不十分で、下地検査を経ずに吹き付けていた。",
+   "cause": "被覆前の下地検査が工程に組み込まれておらず、鉄骨側と被覆側の引継ぎも曖昧だった。",
+   "correction": "不良範囲の被覆を撤去し、下地処理からやり直して再施工。付着強度試験で確認した。",
+   "countermeasure": "被覆前に下地検査（清掃・錆の状態）を工程のゲートにし、付着強度試験の記録を残す。",
+   "keywords": [
+    "耐火被覆",
+    "下地処理",
+    "付着"
+   ]
+  },
+  {
+   "id": "S9",
+   "trade": "steel",
+   "illust": 2,
+   "title": "デッキプレートの掛かり代不足とスタッド試験の未実施区間",
+   "type": "床・付帯不良",
+   "severity": "中",
+   "foundAt": "配筋前確認",
+   "part": "床デッキ・スタッド",
+   "description": "デッキプレートの梁への掛かり代が不足する箇所があり、スタッド溶接の打撃曲げ試験をしていない区間もあった。配筋前の確認で発覚。",
+   "cause": "デッキ敷設時の確認項目に掛かり代がなく、試験記録の提出タイミングも決まっていなかった。",
+   "correction": "掛かり代不足部に補強プレートを追加し、スタッドは追加試験を実施して記録した。",
+   "countermeasure": "デッキ敷設時に掛かり代を確認し、スタッド試験記録は当日のうちに提出させる運用にする。",
+   "keywords": [
+    "デッキプレート",
+    "スタッド",
+    "掛かり代"
+   ]
+  },
+  {
+   "id": "S10",
+   "trade": "steel",
+   "illust": 2,
+   "title": "仮ボルト区間の残存（建方班と本締め班の引継ぎ不良）",
+   "type": "ボルト締結不良",
+   "severity": "中",
+   "foundAt": "建方検査",
+   "part": "梁継手",
+   "description": "仮ボルトのまま本締め工程に移った区間が残っていた。建方班と本締め班の間で、継手ごとの状態の引継ぎがされていなかった。",
+   "cause": "継手の状態（仮締め／本締め／検査済）を管理する台帳や掲示がなく、口頭の引継ぎだけだった。",
+   "correction": "全継手のボルト種別を再確認し、仮ボルト区間を本締めして記録した。",
+   "countermeasure": "継手ごとの状態管理表を現場に掲示し、班の引継ぎは表を見ながら行う。",
+   "keywords": [
+    "仮ボルト",
+    "引継ぎ",
+    "状態管理"
+   ]
+  },
+  {
+   "id": "R11",
+   "trade": "rebar",
+   "illust": 1,
+   "title": "スペーサーの偏りでかぶりがばらつく",
+   "type": "かぶり不足",
+   "severity": "中",
+   "foundAt": "配筋検査",
+   "part": "壁",
+   "description": "スペーサー（サイコロ）が壁の片側に寄って配置され、反対側で鉄筋が型枠に近づき、かぶりが最小値を割り込む箇所が複数見つかった。",
+   "cause": "スペーサーの配置ピッチと必要個数の基準を作業員に示しておらず、置きやすい場所にだけ置かれていた。",
+   "correction": "スペーサーを所定ピッチで追加配置し、全周でかぶりを実測して記録した。",
+   "countermeasure": "スペーサーの配置基準（ピッチ・個数）を配筋図に明記し、自主検査のチェック項目に入れる。",
+   "keywords": [
+    "スペーサー",
+    "かぶり",
+    "配置ピッチ"
+   ]
+  },
+  {
+   "id": "R12",
+   "trade": "rebar",
+   "illust": 2,
+   "title": "梁主筋の継手が同一断面に集中",
+   "type": "継手不良",
+   "severity": "重大",
+   "foundAt": "配筋検査",
+   "part": "梁",
+   "description": "梁主筋のガス圧接継手が同一断面に集中して配置されていた。継手位置をずらす配筋図の指示が現場に伝わっていなかった。",
+   "cause": "加工図の段階で継手位置の割付が検討されておらず、同じ長さの鉄筋をそろえて発注・加工していた。",
+   "correction": "継手位置をずらした鉄筋に交換し、圧接をやり直した。",
+   "countermeasure": "加工図で継手位置の割付を事前に決め、同一断面集中がないかチェックしてから発注する。",
+   "keywords": [
+    "継手集中",
+    "ガス圧接",
+    "加工図"
+   ]
+  },
+  {
+   "id": "R13",
+   "trade": "rebar",
+   "illust": 3,
+   "title": "結束線の緩みと型枠側への飛び出し",
+   "type": "結束不良",
+   "severity": "軽微",
+   "foundAt": "配筋検査",
+   "part": "スラブ",
+   "description": "結束が緩い箇所があり、結束線の端部が型枠側に飛び出していた。打設すれば錆汁の原因になる状態だった。",
+   "cause": "結束作業の出来形基準（結束線は内側に折り曲げる等）が共有されておらず、作業速度優先になっていた。",
+   "correction": "緩い結束を締め直し、飛び出した結束線を全数折り曲げて確認した。",
+   "countermeasure": "結束の仕様を朝礼で実演し、配筋検査で結束状態をサンプリング確認する。",
+   "keywords": [
+    "結束線",
+    "錆汁",
+    "出来形基準"
+   ]
+  },
+  {
+   "id": "R14",
+   "trade": "rebar",
+   "illust": 1,
+   "title": "柱梁接合部コア内のフープ間隔過大",
+   "type": "配筋間違い",
+   "severity": "重大",
+   "foundAt": "配筋検査",
+   "part": "柱梁接合部",
+   "description": "柱梁接合部（コア）内の帯筋間隔が一般部と同じピッチで組まれており、設計の密ピッチになっていなかった。組みにくい箇所ほど間引きされていた。",
+   "cause": "接合部の配筋詳細図がなく、一般部のピッチのまま加工・組立されていた。",
+   "correction": "接合部をばらして所定ピッチの帯筋に入れ替え、組み直した。",
+   "countermeasure": "柱梁接合部の配筋詳細図を作成し、先行してモックアップで組立手順を確認する。",
+   "keywords": [
+    "柱梁接合部",
+    "帯筋",
+    "詳細図"
+   ]
+  },
+  {
+   "id": "R15",
+   "trade": "rebar",
+   "illust": 2,
+   "title": "スラブ主筋の方向取り違え（上下逆）",
+   "type": "配筋間違い",
+   "severity": "重大",
+   "foundAt": "配筋検査",
+   "part": "スラブ",
+   "description": "短辺方向が主筋になるスラブで、主筋と配力筋の上下関係が逆に組まれていた。有効せいが小さくなり、耐力不足になる組み方だった。",
+   "cause": "スラブ配筋の原則（短辺方向が主筋）を担当作業員が理解しておらず、長い鉄筋を下にした方が組みやすいという判断で組んでいた。",
+   "correction": "当該区画のスラブ筋を組み直し、上下関係を全区画で再確認した。",
+   "countermeasure": "スラブ配筋図に主筋方向を矢印で明記し、初回区画は立会いのうえ組み方を確定させる。",
+   "keywords": [
+    "スラブ",
+    "主筋方向",
+    "有効せい"
+   ]
+  },
+  {
+   "id": "R16",
+   "trade": "rebar",
+   "illust": 3,
+   "title": "壁のダブル配筋がシングルになっていた",
+   "type": "配筋間違い",
+   "severity": "重大",
+   "foundAt": "配筋検査",
+   "part": "耐力壁",
+   "description": "ダブル配筋の設計だった耐力壁が、シングル配筋で組まれていた。壁筋の発注数量の不足に現場が気づかないまま組み進めていた。",
+   "cause": "壁配筋図の読み取りミスに加え、材料検収で設計数量との照合をしていなかった。",
+   "correction": "壁を組み直してダブル配筋とし、残りの壁も全数照合した。",
+   "countermeasure": "材料検収時に設計数量と納入数量を照合し、不足があれば組立前にアラートする運用にする。",
+   "keywords": [
+    "ダブル配筋",
+    "耐力壁",
+    "数量照合"
+   ]
+  },
+  {
+   "id": "R17",
+   "trade": "rebar",
+   "illust": 1,
+   "title": "梁主筋のあき不足で充填不良の懸念",
+   "type": "配筋間違い",
+   "severity": "中",
+   "foundAt": "配筋検査",
+   "part": "梁",
+   "description": "梁主筋を3段に重ねた箇所で鉄筋相互のあきが粗骨材最大寸法未満しかなく、コンクリートが回らない状態だった。",
+   "cause": "断面の納まり検討（鉄筋あき・かぶり・粗骨材寸法の整合）が設計・加工の段階でされていなかった。",
+   "correction": "主筋の段数と配置を見直し、あきを確保できる組み方に変更して組み直した。",
+   "countermeasure": "梁断面の納まり図を作成し、あき・かぶり・骨材寸法を一体でチェックする。",
+   "keywords": [
+    "鉄筋のあき",
+    "粗骨材",
+    "納まり"
+   ]
+  },
+  {
+   "id": "R18",
+   "trade": "rebar",
+   "illust": 2,
+   "title": "スリーブ位置ずれで主筋を切断",
+   "type": "開口・スリーブ不良",
+   "severity": "重大",
+   "foundAt": "配筋検査",
+   "part": "梁",
+   "description": "設備スリーブの位置がずれ、梁主筋に干渉したため現場判断で主筋を切断していた。補強筋も入っていなかった。",
+   "cause": "スリーブ割付図と配筋図の照合が打設直前までされておらず、干渉に現場で気づいた。",
+   "correction": "切断した主筋は圧接で復旧し、スリーブ周りに補強筋を追加した。設備側と位置を再調整した。",
+   "countermeasure": "スリーブ割付は配筋前に躯体図へ重ねて照合し、干渉箇所は事前に補強計画を立てる。",
+   "keywords": [
+    "スリーブ",
+    "主筋切断",
+    "補強筋"
+   ]
+  },
+  {
+   "id": "R19",
+   "trade": "rebar",
+   "illust": 3,
+   "title": "型枠内の木屑・ゴミを残したまま打設手配",
+   "type": "清掃不良",
+   "severity": "中",
+   "foundAt": "打設前確認",
+   "part": "基礎梁",
+   "description": "型枠内に木屑、結束線の切りくず、土砂が残ったまま打設の手配が進んでいた。底面に残ると豆板や付着不良の原因になる。",
+   "cause": "打設前の型枠内清掃と確認の担当・タイミングが決まっておらず、「誰かがやる」状態だった。",
+   "correction": "打設を止めて型枠内を清掃し、水洗いと目視確認をしてから打設した。",
+   "countermeasure": "打設前チェックリストに型枠内清掃の確認を入れ、写真記録を必須にする。",
+   "keywords": [
+    "型枠内清掃",
+    "打設前確認",
+    "異物混入"
+   ]
+  },
+  {
+   "id": "R20",
+   "trade": "rebar",
+   "illust": 1,
+   "title": "デッキ上配筋の浮き上がり（かぶり過大）",
+   "type": "かぶり過大",
+   "severity": "中",
+   "foundAt": "配筋検査",
+   "part": "スラブ",
+   "description": "デッキプレート上のスラブ配筋を支える支持金物が不足し、配筋が浮き上がって上端かぶりが過大になっていた。ひび割れと有効せいの低下につながる。",
+   "cause": "支持金物の必要数量の算出と配置が現場任せで、配筋の自重と作業荷重で沈む・浮く想定がなかった。",
+   "correction": "支持金物を所定ピッチで追加し、上端筋の高さを全域で実測した。",
+   "countermeasure": "支持金物の配置基準を配筋要領書に定め、打設直前にも高さ確認を行う。",
+   "keywords": [
+    "支持金物",
+    "かぶり過大",
+    "デッキプレート"
+   ]
+  },
+  {
+   "id": "C11",
+   "trade": "concrete",
+   "illust": 2,
+   "title": "打込み高さ過大による材料分離",
+   "type": "材料分離",
+   "severity": "中",
+   "foundAt": "打設中立会い",
+   "part": "柱",
+   "description": "シュートの吐出口から打込み面まで2mを超える高さで落下打設し、粗骨材が分離して柱脚部に骨材が偏っていた。",
+   "cause": "打設手順書に自由落下高さの制限が明記されておらず、作業のしやすさでシュート位置が決まっていた。",
+   "correction": "分離した部分はバイブレーターで再締固めし、以降は縦シュートを使って落下高さを抑えた。",
+   "countermeasure": "打設手順書に落下高さの上限と器具（縦シュート・トレミー等）を明記し、打設前に確認する。",
+   "keywords": [
+    "材料分離",
+    "落下高さ",
+    "シュート"
+   ]
+  },
+  {
+   "id": "C12",
+   "trade": "concrete",
+   "illust": 1,
+   "title": "バイブレーターのかけ忘れ区間",
+   "type": "締固め不足",
+   "severity": "重大",
+   "foundAt": "脱型後確認",
+   "part": "壁",
+   "description": "脱型後の壁面に、締固め不足による気泡と骨材の露出が帯状に残っていた。バイブレーター担当の受け持ち区間の境目だった。",
+   "cause": "締固めの担当区間と順序が決まっておらず、境目の区間を双方が「相手がかけた」と思っていた。",
+   "correction": "当該区間は無収縮モルタルで補修し、強度への影響がないかテストハンマーで確認した。",
+   "countermeasure": "打設計画で締固めの担当区間と順序を図示し、区間ごとに完了を確認しながら進める。",
+   "keywords": [
+    "締固め",
+    "バイブレーター",
+    "担当区間"
+   ]
+  },
+  {
+   "id": "C13",
+   "trade": "concrete",
+   "illust": 3,
+   "title": "セパレーターピッチ過大で壁厚不足",
+   "type": "寸法不良",
+   "severity": "中",
+   "foundAt": "脱型後確認",
+   "part": "壁",
+   "description": "セパレーターのピッチが広く、打設圧で型枠が開いて壁厚が設計より厚くなった箇所と、締付け不足で段差が出た箇所があった。",
+   "cause": "型枠の強度計算に基づくセパレーター割付がされておらず、経験的なピッチで組まれていた。",
+   "correction": "壁厚の実測を行い、許容を超えた箇所は斫りと補修で納まりを確保した。",
+   "countermeasure": "型枠支保工の計画時に側圧計算を行い、セパレーター割付図を作成する。",
+   "keywords": [
+    "セパレーター",
+    "側圧",
+    "壁厚"
+   ]
+  },
+  {
+   "id": "C14",
+   "trade": "concrete",
+   "illust": 2,
+   "title": "暑中コンクリートの打重ね時間超過",
+   "type": "コールドジョイント",
+   "severity": "重大",
+   "foundAt": "打設中立会い",
+   "part": "スラブ",
+   "description": "真夏の打設で生コンの運搬が滞り、先行層が凝結し始めた後に次の層を打ち重ねた。打重ね時間の制限を超えていた。",
+   "cause": "気温上昇による凝結の早まりを見込んだ打設計画（台数・ピッチの調整）がされておらず、渋滞で運搬が遅れた。",
+   "correction": "打重ね部はレイタンス処理と目荒らしを行い、一体性を確認したうえで継続した。残りの区画は早朝打設に切り替えた。",
+   "countermeasure": "暑中は打重ね許容時間を短めに設定し、出荷工場と運搬状況をリアルタイムで共有する。",
+   "keywords": [
+    "暑中コンクリート",
+    "打重ね",
+    "凝結"
+   ]
+  },
+  {
+   "id": "C15",
+   "trade": "concrete",
+   "illust": 3,
+   "title": "寒中コンクリートの養生温度の記録なし",
+   "type": "養生不良",
+   "severity": "中",
+   "foundAt": "記録確認",
+   "part": "基礎",
+   "description": "寒中の打設で給熱養生を行っていたが、温度測定の記録がなく、所定の養生温度が保たれていたか証明できなかった。",
+   "cause": "養生計画に温度測定の頻度と記録方法が定められておらず、担当も決まっていなかった。",
+   "correction": "供試体の強度確認で所要強度を満たすことを確認した。以降の打設では温度記録を開始した。",
+   "countermeasure": "寒中養生は温度測定の担当・頻度・記録様式を養生計画に明記する。",
+   "keywords": [
+    "寒中コンクリート",
+    "給熱養生",
+    "温度記録"
+   ]
+  },
+  {
+   "id": "C16",
+   "trade": "concrete",
+   "illust": 1,
+   "title": "打継ぎ位置の取り違え",
+   "type": "打継ぎ不良",
+   "severity": "重大",
+   "foundAt": "打設前確認",
+   "part": "梁",
+   "description": "打継ぎ位置が、せん断力の小さい中央付近ではなく支点寄りに設定されていた。打設計画図の読み違いだった。",
+   "cause": "打継ぎ位置の根拠（応力の小さい位置）を計画段階で確認しておらず、前回区画の位置をそのまま踏襲していた。",
+   "correction": "打継ぎ位置を計画通りの位置に変更し、止型枠を組み直した。",
+   "countermeasure": "打設計画図に打継ぎ位置とその根拠を明記し、打設前確認で必ず照合する。",
+   "keywords": [
+    "打継ぎ位置",
+    "せん断力",
+    "打設計画"
+   ]
+  },
+  {
+   "id": "C17",
+   "trade": "concrete",
+   "illust": 2,
+   "title": "受入検査未実施のまま打設開始",
+   "type": "受入検査不良",
+   "severity": "重大",
+   "foundAt": "打設中立会い",
+   "part": "スラブ",
+   "description": "スランプ・空気量の受入検査を行う前に、到着した生コンの打設が始まっていた。検査担当の到着が遅れたことがきっかけだった。",
+   "cause": "受入検査の完了が打設開始の条件であることが、手配と現場の間で共有されていなかった。",
+   "correction": "打設を一時止めて受入検査を実施し、合格を確認してから再開した。当該車の打設分は供試体で強度確認した。",
+   "countermeasure": "打設開始は受入検査合格を条件とし、検査担当の配置を打設計画に組み込む。",
+   "keywords": [
+    "受入検査",
+    "スランプ",
+    "空気量"
+   ]
+  },
+  {
+   "id": "C18",
+   "trade": "concrete",
+   "illust": 3,
+   "title": "先送りモルタルの処理漏れ",
+   "type": "打設手順不良",
+   "severity": "中",
+   "foundAt": "打設中立会い",
+   "part": "壁",
+   "description": "ポンプ圧送開始時の先送りモルタルが型枠内にそのまま打ち込まれていた。強度と付着に影響する部分になる。",
+   "cause": "圧送手順に先送りモルタルの廃棄方法が定められておらず、もったいないという判断で打ち込まれていた。",
+   "correction": "当該部分の位置を記録し、硬化後に強度確認と付着確認を行った。以降は場外に廃棄する手順に統一した。",
+   "countermeasure": "圧送手順書に先送りモルタルの処理（場外廃棄）を明記し、打設前にポンプ業者と確認する。",
+   "keywords": [
+    "先送りモルタル",
+    "ポンプ圧送",
+    "手順書"
+   ]
+  },
+  {
+   "id": "C19",
+   "trade": "concrete",
+   "illust": 1,
+   "title": "型枠内の溜まり水を除去せず打設",
+   "type": "打設手順不良",
+   "severity": "中",
+   "foundAt": "打設前確認",
+   "part": "基礎梁",
+   "description": "前日の雨で型枠内に溜まった水を除去しないまま打設しようとしていた。水が残ると水セメント比が局所的に上がり、強度低下と豆板の原因になる。",
+   "cause": "打設前確認の項目に型枠内の水の確認がなく、天候変化への対応が現場任せだった。",
+   "correction": "ポンプとスポンジで溜まり水を除去し、底面の状態を確認してから打設した。",
+   "countermeasure": "打設前チェックリストに「型枠内の水・異物」の項目を追加し、雨天後は必須確認とする。",
+   "keywords": [
+    "溜まり水",
+    "雨天",
+    "打設前確認"
+   ]
+  },
+  {
+   "id": "C20",
+   "trade": "concrete",
+   "illust": 2,
+   "title": "テストピース採取頻度不足（強度管理の欠落）",
+   "type": "品質記録不良",
+   "severity": "中",
+   "foundAt": "記録確認",
+   "part": "全体",
+   "description": "打設日ごとの供試体採取が所定の頻度に達しておらず、強度管理の記録が欠落している日があった。",
+   "cause": "供試体採取の計画（頻度・本数・養生方法）が打設計画に含まれておらず、検査会社の手配も都度になっていた。",
+   "correction": "欠落した日は構造体コンクリートのコア採取で強度を確認した。",
+   "countermeasure": "打設計画に供試体採取計画を組み込み、採取記録を打設日報とセットで管理する。",
+   "keywords": [
+    "供試体",
+    "強度管理",
+    "記録"
+   ]
+  },
+  {
+   "id": "S11",
+   "trade": "steel",
+   "illust": 2,
+   "title": "締付け検査マーキングの未実施区間",
+   "type": "ボルト締結不良",
+   "severity": "中",
+   "foundAt": "本締め検査",
+   "part": "梁継手",
+   "description": "高力ボルトの締付け完了を示すマーキングがない継手が複数あり、締付け検査を受けたかどうか判別できなかった。",
+   "cause": "締付け→マーキング→検査の手順が班ごとにばらつき、マーキングを省略する班があった。",
+   "correction": "未マーキングの継手は全数再確認し、トルク確認のうえマーキングした。",
+   "countermeasure": "締付け手順を標準化し、マーキング完了を検査受付の条件にする。",
+   "keywords": [
+    "マーキング",
+    "締付け検査",
+    "高力ボルト"
+   ]
+  },
+  {
+   "id": "S12",
+   "trade": "steel",
+   "illust": 1,
+   "title": "溶接の始終端処理不良（クレーター割れ）",
+   "type": "溶接不良",
+   "severity": "重大",
+   "foundAt": "外観検査",
+   "part": "柱継手",
+   "description": "完全溶込み溶接の終端部にクレーターが残り、小さな割れが見つかった。エンドタブの処理も不十分だった。",
+   "cause": "始終端の処理（タブの設置・クレーター処理）の要領が溶接工に徹底されておらず、外観検査もサンプリングだった。",
+   "correction": "割れ部分をガウジングで除去して再溶接し、UTで健全性を確認した。",
+   "countermeasure": "溶接要領書に始終端処理を明記し、柱継手は全数外観検査を行う。",
+   "keywords": [
+    "クレーター",
+    "エンドタブ",
+    "再溶接"
+   ]
+  },
+  {
+   "id": "S13",
+   "trade": "steel",
+   "illust": 3,
+   "title": "開先角度不足による溶け込み不良",
+   "type": "溶接不良",
+   "severity": "重大",
+   "foundAt": "UT検査",
+   "part": "柱梁接合部",
+   "description": "工場溶接の開先角度が所定より小さく、UTで溶け込み不足が検出された。加工段階の角度管理ができていなかった。",
+   "cause": "開先加工後の角度確認が抜き取りで、加工機の設定ずれに気づかなかった。",
+   "correction": "該当部材は開先を修正して再溶接し、同ロットの部材を全数UTで確認した。",
+   "countermeasure": "開先加工後に角度ゲージで全数確認し、加工機の点検記録とセットで管理する。",
+   "keywords": [
+    "開先",
+    "溶け込み",
+    "UT"
+   ]
+  },
+  {
+   "id": "S14",
+   "trade": "steel",
+   "illust": 2,
+   "title": "仮締め本数不足のまま次節の建方へ",
+   "type": "建方不良",
+   "severity": "重大",
+   "foundAt": "建方検査",
+   "part": "柱継手",
+   "description": "継手の仮締めボルトが所定本数を満たさないまま、次節の建方が進んでいた。風荷重に対する安定性が不足する状態だった。",
+   "cause": "建方の進捗を優先し、仮締め完了の確認をしないまま次節に移る運用になっていた。",
+   "correction": "建方を止めて全継手の仮締めを所定本数まで完了させ、建入れを再測定した。",
+   "countermeasure": "次節建方は仮締め完了の確認を条件とし、確認者を建方計画に明記する。",
+   "keywords": [
+    "仮締め",
+    "建方",
+    "安定性"
+   ]
+  },
+  {
+   "id": "S15",
+   "trade": "steel",
+   "illust": 1,
+   "title": "素地調整不足のまま工場塗装（発錆）",
+   "type": "塗装・防錆不良",
+   "severity": "中",
+   "foundAt": "搬入検査",
+   "part": "梁",
+   "description": "搬入された梁の塗装面に発錆と膨れが見られた。素地調整（ケレン）が不足したまま塗装されていた。",
+   "cause": "製作工場の素地調整のグレード管理と、塗装前の立会い確認が省略されていた。",
+   "correction": "発錆部は素地調整をやり直してタッチアップ塗装し、付着を確認した。",
+   "countermeasure": "工場製作の検査項目に素地調整グレードを入れ、塗装前に写真で確認する。",
+   "keywords": [
+    "素地調整",
+    "発錆",
+    "工場塗装"
+   ]
+  },
+  {
+   "id": "S16",
+   "trade": "steel",
+   "illust": 3,
+   "title": "デッキプレート栓溶接のピッチ過大",
+   "type": "溶接不良",
+   "severity": "中",
+   "foundAt": "建方検査",
+   "part": "床デッキ",
+   "description": "デッキプレートを梁に留める焼抜き栓溶接のピッチが所定より広く、打設時のずれ止めとして不足していた。",
+   "cause": "栓溶接のピッチ基準が作業員に示されておらず、目分量で打たれていた。",
+   "correction": "ピッチ不足の区間は栓溶接を追加し、全区間でピッチを実測した。",
+   "countermeasure": "デッキ割付図に栓溶接ピッチを明記し、初回区間は立会いで出来形を確定させる。",
+   "keywords": [
+    "デッキプレート",
+    "栓溶接",
+    "ピッチ"
+   ]
+  },
+  {
+   "id": "S17",
+   "trade": "steel",
+   "illust": 2,
+   "title": "ブレース干渉で現場拡孔",
+   "type": "製作精度不良",
+   "severity": "中",
+   "foundAt": "建方中",
+   "part": "ブレース",
+   "description": "ブレースのガセットプレートと梁フランジが干渉し、ボルト孔が合わず現場で拡孔していた。製作図の取り合い確認漏れだった。",
+   "cause": "製作図の段階で他部材との干渉チェックがされておらず、現地で初めて発覚した。",
+   "correction": "拡孔した孔は径と縁端距離を確認し、許容を超えるものはプレートを交換した。",
+   "countermeasure": "製作図承認時に干渉チェックリストを用い、ブレース周りは重点確認する。",
+   "keywords": [
+    "ブレース",
+    "干渉",
+    "拡孔"
+   ]
+  },
+  {
+   "id": "S18",
+   "trade": "steel",
+   "illust": 1,
+   "title": "鉄骨階段の先行取付忘れ",
+   "type": "工程・段取り不良",
+   "severity": "軽微",
+   "foundAt": "建方検査",
+   "part": "階段",
+   "description": "鉄骨階段が建方と同時の先行取付になっておらず、後付けでは搬入経路が確保できない位置があった。",
+   "cause": "階段の取付時期が建方計画に組み込まれておらず、製作の手配も遅れていた。",
+   "correction": "上部の建方手順を変更して搬入経路を確保し、階段を取り付けた。",
+   "countermeasure": "建方計画に階段・手すり等の先行取付部材をリスト化し、製作手配と連動させる。",
+   "keywords": [
+    "鉄骨階段",
+    "先行取付",
+    "建方計画"
+   ]
+  },
+  {
+   "id": "S19",
+   "trade": "steel",
+   "illust": 3,
+   "title": "耐火被覆の吹付け厚不足",
+   "type": "耐火被覆不良",
+   "severity": "重大",
+   "foundAt": "被覆検査",
+   "part": "梁",
+   "description": "耐火被覆の吹付け厚が認定仕様の下限を下回る箇所があった。厚さ確認ピンの記録も残っていなかった。",
+   "cause": "吹付け厚の管理方法（ピンの本数・測定位置）が施工計画に定められておらず、作業員の感覚に頼っていた。",
+   "correction": "厚さ不足の箇所は増し吹きし、全区間で厚さを実測して記録した。",
+   "countermeasure": "被覆施工計画に厚さ確認ピンの配置と測定記録を明記し、区画ごとに検査を受ける。",
+   "keywords": [
+    "耐火被覆",
+    "吹付け厚",
+    "認定仕様"
+   ]
+  },
+  {
+   "id": "S20",
+   "trade": "steel",
+   "illust": 2,
+   "title": "アンカーボルトの突出し長さ不足",
+   "type": "据付不良",
+   "severity": "中",
+   "foundAt": "建方前確認",
+   "part": "柱脚",
+   "description": "アンカーボルトの突出しが不足し、ダブルナットが十分に掛からない柱脚があった。ベースモルタルの厚さ変動を見込んでいなかった。",
+   "cause": "ボルトの据付時に天端レベルと突出しの管理値が示されておらず、基礎側の出来形と照合していなかった。",
+   "correction": "掛かり不足のボルトは継ぎ足し金物で対応し、全柱脚で突出しを実測した。",
+   "countermeasure": "アンカーボルト据付図に突出しの管理値を明記し、基礎打設前に総点検する。",
+   "keywords": [
+    "アンカーボルト",
+    "突出し",
+    "柱脚"
+   ]
+  }
+ ],
+ "SAMPLE_PHOTOS": [
+  {
+   "id": "photo-rebar",
+   "src": "quality-photos/rebar.jpg",
+   "label": "サンプル写真A（配筋中の現場）",
+   "candidates": [
+    {
+     "trade": "rebar",
+     "score": 93,
+     "note": "格子状の鉄筋と結束作業を検出"
+    },
+    {
+     "trade": "concrete",
+     "score": 41,
+     "note": "型枠・地盤の写り込みあり"
+    },
+    {
+     "trade": "steel",
+     "score": 12,
+     "note": "鉄骨要素は検出されず"
+    }
+   ]
+  },
+  {
+   "id": "photo-concrete",
+   "src": "quality-photos/concrete.jpg",
+   "label": "サンプル写真B（生コン車のある現場）",
+   "candidates": [
+    {
+     "trade": "concrete",
+     "score": 90,
+     "note": "生コン車とシュートを検出"
+    },
+    {
+     "trade": "rebar",
+     "score": 35,
+     "note": "基礎まわりの要素あり"
+    },
+    {
+     "trade": "steel",
+     "score": 18,
+     "note": "鉄骨要素は検出されず"
+    }
+   ]
+  },
+  {
+   "id": "photo-steel",
+   "src": "quality-photos/steel.jpg",
+   "label": "サンプル写真C（建方中の現場）",
+   "candidates": [
+    {
+     "trade": "steel",
+     "score": 88,
+     "note": "鉄骨フレームとクレーンを検出"
+    },
+    {
+     "trade": "rebar",
+     "score": 22,
+     "note": "基礎まわりの要素あり"
+    },
+    {
+     "trade": "concrete",
+     "score": 15,
+     "note": "打設要素は検出されず"
+    }
+   ]
+  }
+ ],
+ "ACCIDENTS": [
+  {
+   "id": 20,
+   "title": "単管パイプ工場解体中に水平材から墜落",
+   "type": "墜落・転落",
+   "category": "解体工事",
+   "imageDir": "職場のあんぜんサイト：労働災害統計20",
+   "imageFiles": [
+    "fc215869-1.png",
+    "fc215869-2.png",
+    "fc215869-3.png"
+   ],
+   "keywords": [
+    "解体",
+    "単管足場",
+    "安全帯"
+   ],
+   "description": "解体中の水平材を移動中、安全帯のフックを掛け替えようとして、緩んでいた縦単管に手をかけ転落。",
+   "countermeasure": "2丁掛け安全帯の徹底。解体手順の遵守。クランプの緩み確認。"
+  },
+  {
+   "id": 19,
+   "title": "コンクリート打設中、フラットデッキが抜け作業員5名が墜落",
+   "type": "崩壊・倒壊",
+   "category": "躯体・コンクリ",
+   "imageDir": "職場のあんぜんサイト：労働災害統計19",
+   "imageFiles": [
+    "8f33feb3-1.png",
+    "8f33feb3-2.png"
+   ],
+   "keywords": [
+    "コンクリート打設",
+    "支保工",
+    "スラブ"
+   ],
+   "description": "許容スパンを超えたデッキプレート上で打設中、デッキが外れ下階まで墜落。",
+   "countermeasure": "割付図通りの支保工設置。許容荷重の確認。打設順序の遵守。"
+  },
+  {
+   "id": 18,
+   "title": "キュービクル式高圧受電設備内で露出充電部に触れ感電",
+   "type": "感電",
+   "category": "電気設備",
+   "imageDir": "職場のあんぜんサイト：労働災害統計18",
+   "imageFiles": [
+    "ca8088fb-1.png",
+    "ca8088fb-2.png"
+   ],
+   "keywords": [
+    "電気工事",
+    "高圧受電",
+    "絶縁シート"
+   ],
+   "description": "通電中の隣接系統との境界に絶縁シートを取り付ける際、露出していた変流器端子に接触。",
+   "countermeasure": "絶縁用保護具の着用。作業指揮者の配置。停電範囲の明確化。"
+  },
+  {
+   "id": 17,
+   "title": "脚立での配管移設中、仮設配線を踏み作業員4名が感電",
+   "type": "感電",
+   "category": "設備工事",
+   "imageDir": "職場のあんぜんサイト：労働災害統計17",
+   "imageFiles": [
+    "6601321b-1.png",
+    "6601321b-2.png"
+   ],
+   "keywords": [
+    "配管工事",
+    "脚立",
+    "漏電"
+   ],
+   "description": "脚立の足で仮設ケーブルを踏み、被覆が剥がれて脚立が帯電。救助者も含め感電。",
+   "countermeasure": "ケーブルの養生・高所配線。絶縁性の脚立使用。漏電遮断機の設置。"
+  },
+  {
+   "id": 16,
+   "title": "クレーン作業中、突風で補助ジブが折れ、つり荷が落下",
+   "type": "飛来・落下",
+   "category": "揚重・クレーン",
+   "relatedCategories": [
+    "鉄骨・躯体",
+    "外装工事"
+   ],
+   "imageDir": "職場のあんぜんサイト：労働災害統計16",
+   "imageFiles": [
+    "747087f5-1.png",
+    "747087f5-2.png",
+    "747087f5-3.png"
+   ],
+   "keywords": [
+    "クレーン",
+    "強風",
+    "過負荷防止"
+   ],
+   "description": "長尺な屋根材を吊り上げ中、突風を受け補助ジブが破損。過負荷防止装置のミスも重なった。",
+   "countermeasure": "強風時の作業中止基準の遵守。過負荷防止装置の適正設定。"
+  },
+  {
+   "id": 14,
+   "title": "天井クレーンでダクト吊り上げ中、フックブロックが落下",
+   "type": "飛来・落下",
+   "category": "揚重・クレーン",
+   "relatedCategories": [
+    "設備工事",
+    "電気設備"
+   ],
+   "imageDir": "職場のあんぜんサイト：労働災害統計14",
+   "imageFiles": [
+    "bd93ebed-1.png",
+    "bd93ebed-2.png",
+    "bd93ebed-3.png"
+   ],
+   "keywords": [
+    "巻過防止",
+    "ワイヤー切断"
+   ],
+   "description": "巻過防止装置を無効にした状態で作業。ワイヤーが噛み込み切断され落下。",
+   "countermeasure": "安全装置を故意に解除しない。始業前点検の徹底。"
+  },
+  {
+   "id": 13,
+   "title": "鉄骨組立作業中、梁上から足を踏み外し墜落",
+   "type": "墜落・転落",
+   "category": "鉄骨・躯体",
+   "imageDir": "職場のあんぜんサイト：労働災害統計13",
+   "imageFiles": [
+    "25586fc3-1.png",
+    "25586fc3-2.png"
+   ],
+   "keywords": [
+    "梁上作業",
+    "安全帯フック"
+   ],
+   "description": "幅10cmの梁上を歩行中、足を踏み外し8m下に墜落。安全帯は掛けていなかった。",
+   "countermeasure": "親綱へのフック掛け徹底。安全ネットの早期展張。"
+  },
+  {
+   "id": 10,
+   "title": "地下ピット内でアーク溶接中に感電",
+   "type": "感電",
+   "category": "地下・基礎",
+   "imageDir": "職場のあんぜんサイト：労働災害統計10",
+   "imageFiles": [
+    "7e932389-1.png",
+    "7e932389-2.png",
+    "7e932389-3.png"
+   ],
+   "keywords": [
+    "溶接",
+    "水たまり",
+    "ピット"
+   ],
+   "description": "浸水したピット内で溶接作業を中断した際、ホルダーを足場にかけ回路が形成され感電。",
+   "countermeasure": "水場での作業停止。ホルダーの絶縁管理。電防点検。"
+  },
+  {
+   "id": 8,
+   "title": "ダンプトラックが突現在後退し挟まれる",
+   "type": "はさまれ",
+   "category": "土工・基礎",
+   "imageDir": "職場のあんぜんサイト：労働災害統計8",
+   "imageFiles": [
+    "d1240c61-1.png",
+    "d1240c61-2.png"
+   ],
+   "keywords": [
+    "ダンプ",
+    "輪留め",
+    "自走"
+   ],
+   "description": "傾斜地で砕石降ろし中、サイドブレーキが不十分でダンプが自走し柱に挟まれた。",
+   "countermeasure": "傾斜地での輪留め使用。エンジン停止・完全制動。"
+  }
+ ],
+ "SCHEDULE": [
+  {
+   "id": 1,
+   "task": "既存建物解体工事",
+   "start": "2026-03-01",
+   "end": "2026-03-20",
+   "category": "解体工事"
+  },
+  {
+   "id": 2,
+   "task": "山留め・根切り工事",
+   "start": "2026-03-15",
+   "end": "2026-04-10",
+   "category": "土工・基礎"
+  },
+  {
+   "id": 3,
+   "task": "基礎杭・地業",
+   "start": "2026-04-05",
+   "end": "2026-04-25",
+   "category": "土工・基礎"
+  },
+  {
+   "id": 4,
+   "task": "1F躯体・地下ピット",
+   "start": "2026-04-20",
+   "end": "2026-05-15",
+   "category": "地下・基礎"
+  },
+  {
+   "id": 5,
+   "task": "鉄骨建方（下層節）",
+   "start": "2026-05-10",
+   "end": "2026-06-05",
+   "category": "鉄骨・躯体"
+  },
+  {
+   "id": 6,
+   "task": "床デッキプレート敷設",
+   "start": "2026-05-20",
+   "end": "2026-06-15",
+   "category": "躯体・コンクリ"
+  },
+  {
+   "id": 7,
+   "task": "スラブ配筋・コン打設",
+   "start": "2026-06-01",
+   "end": "2026-06-25",
+   "category": "躯体・コンクリ"
+  },
+  {
+   "id": 8,
+   "task": "カーテンウォール取付",
+   "start": "2026-06-15",
+   "end": "2026-07-20",
+   "category": "外装工事"
+  },
+  {
+   "id": 9,
+   "task": "設備配管・空調ダクト",
+   "start": "2026-06-20",
+   "end": "2026-07-30",
+   "category": "設備工事"
+  },
+  {
+   "id": 10,
+   "task": "強電・弱電幹線敷設",
+   "start": "2026-07-01",
+   "end": "2026-08-10",
+   "category": "電気設備"
+  },
+  {
+   "id": 11,
+   "task": "内装LGS下地・ボード",
+   "start": "2026-07-15",
+   "end": "2026-08-25",
+   "category": "内装工事"
+  }
+ ]
+};
+</script>
+<script>
+'use strict';
+const { TRADES, CASES, SAMPLE_PHOTOS, ACCIDENTS, SCHEDULE } = DATA;
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => [...(r || document).querySelectorAll(s)];
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+const DAY_MS = 86400000, DAY_W = 7, LABEL_W = 250, TICK = 14;
+const pDate = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const fDate = (dt) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+const addD = (dt, n) => new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() + n);
+const diffD = (a, b) => Math.round((pDate(fDate(b)) - pDate(fDate(a))) / DAY_MS);
+const START = pDate('2026-03-01'), END = pDate('2026-08-25');
+const TOTAL = diffD(START, END);
+
+const CATEGORY_TO_TRADES = { '地下・基礎': ['rebar', 'concrete'], '躯体・コンクリ': ['rebar', 'concrete'], '鉄骨・躯体': ['steel'] };
+const TRADE_TO_DISASTER = { rebar: ['躯体・コンクリ', '地下・基礎'], concrete: ['躯体・コンクリ', '地下・基礎'], steel: ['鉄骨・躯体'] };
+const SEV = { '重大': 'high', '中': 'mid', '軽微': 'low' };
+const accImg = (a, f) => `image-assets/${a.id}/${f}?v=20260318b`;
+const qImg = (c) => `quality-illust/${c.trade}-${c.illust}.png`;
+
+const S = {
+  tab: 'sim',
+  dayOffset: diffD(START, pDate('2026-03-18')),
+  selAccident: ACCIDENTS[0].id,
+  selCase: CASES[0].id,
+  qFilter: 'all',
+  photo: { kind: null, sampleId: null, upUrl: null, upName: '', analyzing: false, cands: null, chosen: null },
+};
+const curDate = () => addD(START, S.dayOffset);
+const activeTasks = () => { const t = curDate().getTime(); return SCHEDULE.filter((x) => pDate(x.start).getTime() <= t && t <= pDate(x.end).getTime()); };
+const disasterNow = () => { const cats = activeTasks().map((x) => x.category); return ACCIDENTS.filter((a) => cats.includes(a.category) || (a.relatedCategories || []).some((c) => cats.includes(c))); };
+const qualityPool = () => { const set = new Set(); activeTasks().forEach((x) => (CATEGORY_TO_TRADES[x.category] || []).forEach((t) => set.add(t))); return { trades: set, pool: CASES.filter((c) => set.has(c.trade)) }; };
+
+function seededShuffle(list, seedText) {
+  let seed = 2166136261;
+  for (let i = 0; i < seedText.length; i++) { seed ^= seedText.charCodeAt(i); seed = Math.imul(seed, 16777619); }
+  const rand = () => { seed = Math.imul(seed ^ (seed >>> 15), 2246822519); seed = Math.imul(seed ^ (seed >>> 13), 3266489917); seed ^= seed >>> 16; return (seed >>> 0) / 4294967296; };
+  const arr = [...list];
+  for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+  return arr;
+}
+const dailyCases = (pool, dateStr, n = 10) => (pool.length <= n ? pool : seededShuffle(pool, `quality-${dateStr}`).slice(0, n));
+
+/* ===== カード ===== */
+function disasterCard(a) {
+  return `<article class="case">
+    <div class="thumb"><img src="${accImg(a, a.imageFiles[0])}" alt="${esc(a.title)}" data-zoom-acc="${a.id}" /></div>
+    <div class="body">
+      <div class="meta"><span>${esc(a.category)}</span><span class="cid">#${a.id}</span></div>
+      <p class="facts">${esc(a.type)}</p>
+      <h3>${esc(a.title)}</h3>
+      <p>${esc(a.description)}</p>
+      <div class="detail">
+        <p class="imgcount">資料画像: ${a.imageFiles.length} 枚（画像クリックで拡大）</p>
+        <div class="tags">${a.keywords.map((k) => `<span>${esc(k)}</span>`).join('')}</div>
+        <p class="cm">再発防止策: ${esc(a.countermeasure)}</p>
+      </div>
+      <button class="fold" data-act="fold">詳細表示 ▾</button>
+    </div>
+  </article>`;
+}
+function qualityCard(c) {
+  const t = TRADES[c.trade];
+  return `<article class="case quality">
+    <div class="thumb"><img src="${qImg(c)}" alt="${esc(c.title)} イラスト" data-zoom-q="${c.id}" /></div>
+    <div class="body">
+      <div class="meta"><span class="chip">${esc(t.label)}</span><span class="cid">#${c.id}</span></div>
+      <p class="facts">${esc(c.type)}／発見：${esc(c.foundAt)}／部位：${esc(c.part)}<span class="sev sev-${SEV[c.severity] || 'low'}">重大度：${esc(c.severity)}</span></p>
+      <h3>${esc(c.title)}</h3>
+      <p>${esc(c.description)}</p>
+      <div class="detail">
+        <p><strong>原因：</strong>${esc(c.cause)}</p>
+        <p><strong>是正：</strong>${esc(c.correction)}</p>
+        <div class="tags">${c.keywords.map((k) => `<span>${esc(k)}</span>`).join('')}</div>
+        <p class="cm">再発防止：${esc(c.countermeasure)}</p>
+      </div>
+      <button class="fold" data-act="fold">詳細表示 ▾</button>
+    </div>
+  </article>`;
+}
+
+/* ===== 工程表ビュー ===== */
+function simView() {
+  const tasks = activeTasks();
+  const sugg = disasterNow();
+  const { trades, pool } = qualityPool();
+  const picks = dailyCases(pool, fDate(curDate()));
+  const imgTotal = sugg.reduce((n, a) => n + a.imageFiles.length, 0);
+  let ticks = '';
+  for (let d = 0; d <= TOTAL; d += TICK) { const t = addD(START, d); ticks += `<span style="left:${d * DAY_W}px">${t.getMonth() + 1}/${t.getDate()}</span>`; }
+  const rows = SCHEDULE.map((x) => {
+    const act = tasks.some((t) => t.id === x.id);
+    const left = LABEL_W + diffD(START, pDate(x.start)) * DAY_W;
+    const w = Math.max(30, (diffD(pDate(x.start), pDate(x.end)) + 1) * DAY_W);
+    return `<div class="g-row ${act ? 'act' : ''}"><div class="nm" title="${esc(x.task)}">${esc(x.task)}</div><div class="bar" style="left:${left}px;width:${w}px"></div></div>`;
+  }).join('');
+  const lineLeft = LABEL_W + S.dayOffset * DAY_W;
+  return `<section class="view sim on">
+    <div class="card gantt-card">
+      <h2>今日起こりそうな事故・不具合</h2>
+      <p class="note">赤い縦ラインをドラッグして日付を変更してください。その日の工程に基づいた事例が表示されます。</p>
+      <div class="gantt-scroll" id="gScroll">
+        <div class="gantt" style="width:${LABEL_W + TOTAL * DAY_W + 90}px">
+          <div class="g-head"><div class="lab">工程</div><div class="track">${ticks}</div></div>
+          <div class="today" id="todayLine" style="left:${lineLeft}px"><span class="pill">${fDate(curDate())}</span><i class="dotb"></i></div>
+          <div class="g-rows">${rows}</div>
+        </div>
+      </div>
+    </div>
+    <div class="dual">
+      <div class="card list-card">
+        <h2><span class="dot" style="background:var(--red)"></span>災害事例（左）</h2>
+        <p class="summary">事例 ${sugg.length} 件／資料画像 合計 ${imgTotal} 枚</p>
+        ${sugg.length === 0 ? '<div class="empty">この日付に該当する重点警戒事例はありません。</div>' : `<div class="items">${sugg.map(disasterCard).join('')}</div>`}
+      </div>
+      <div class="card list-card">
+        <h2><span class="dot" style="background:var(--teal)"></span>品質不具合事例（右）</h2>
+        <p class="summary">対象工種：${trades.size ? [...trades].map((t) => TRADES[t].label).join('、') : 'なし'}${pool.length > picks.length ? `／全${pool.length}件から本日の重点${picks.length}件（日付でローテーション）` : `／事例 ${picks.length} 件`}</p>
+        ${picks.length === 0 ? '<div class="empty">この日の工程に対応する品質事例はありません。品質事例があるのは躯体系の工程（地下・基礎／躯体・コンクリ／鉄骨・躯体）で、対象は鉄筋・コンクリート・鉄骨の3工種です。他工種は準備中です。</div>' : `<div class="items">${picks.map(qualityCard).join('')}</div>`}
+      </div>
+    </div>
+  </section>`;
+}
+
+/* ===== 写真で判別ビュー ===== */
+function photoView() {
+  const P = S.photo;
+  const sample = P.kind === 'sample' ? SAMPLE_PHOTOS.find((p) => p.id === P.sampleId) : null;
+  const preview = P.kind === 'upload' ? P.upUrl : sample ? sample.src : null;
+  const thumbs = SAMPLE_PHOTOS.map((p) => `
+    <button class="pthumb ${P.kind === 'sample' && P.sampleId === p.id ? 'sel' : ''}" data-act="photo-sample" data-id="${p.id}">
+      <img src="${p.src}" alt="${esc(p.label)}" /><span>${esc(p.label)}</span>
+    </button>`).join('');
+  let cands = '';
+  if (P.cands) {
+    cands = `<div class="cands"><h3>判別候補（デモ用決め打ち）</h3>${P.cands.map((c) => `
+      <button class="cand ${P.chosen === c.trade ? 'sel' : ''}" data-act="cand" data-trade="${c.trade}">
+        <span class="nm">${esc(TRADES[c.trade].label)}</span>
+        <span class="barbg"><i style="width:${c.score}%"></i></span>
+        <span class="sc">${c.score}%</span>
+        <span class="nt">${esc(c.note)}</span>
+      </button>`).join('')}
+      <p class="note">候補をクリックで切り替えられます。右に選択中の工種の事例を表示しています。</p></div>`;
+  }
+  let results;
+  if (P.chosen && P.cands) {
+    const qc = CASES.filter((c) => c.trade === P.chosen);
+    const cats = TRADE_TO_DISASTER[P.chosen] || [];
+    const sc = ACCIDENTS.filter((a) => cats.includes(a.category) || (a.relatedCategories || []).some((x) => cats.includes(x)));
+    results = `
+      <div class="card list-card">
+        <h2><span class="dot" style="background:var(--teal)"></span>${esc(TRADES[P.chosen].label)}の不具合事例（${qc.length}件）</h2>
+        <div class="items">${qc.map(qualityCard).join('')}</div>
+      </div>
+      ${sc.length ? `<div class="card list-card">
+        <h2><span class="dot" style="background:var(--red)"></span>関連する安全（災害）事例（${sc.length}件）</h2>
+        <div class="items">${sc.map(disasterCard).join('')}</div>
+      </div>` : ''}`;
+  } else {
+    results = `<div class="wait">写真を選んで「工種を判別する」を押すと、<br/>ここに不具合事例と安全事例が表示されます。</div>`;
+  }
+  return `<section class="view photo-view on">
+    <div class="photo-rail">
+      <div class="card">
+        <h2>現場写真から工種を判別</h2>
+        <p class="note">写真を選ぶ（またはアップロードする）と工種の候補を提示します。候補から工種を選ぶと、その工種の品質不具合事例と関連する安全（災害）事例が右に表示されます。<strong>デモ版では判別は決め打ちです</strong>（本番ではLLMの画像認識で判別する想定）。</p>
+        <div class="picker">
+          ${thumbs}
+          <label class="pthumb up ${P.kind === 'upload' ? 'sel' : ''}">＋<small>自分の写真を<br/>アップロード</small><input type="file" id="upFile" accept="image/*" hidden /></label>
+        </div>
+        ${preview ? `<div class="preview"><img src="${preview}" alt="判別対象の写真" /></div>` : ''}
+        <div>
+          <button class="btn" data-act="analyze" ${!P.kind || P.analyzing ? 'disabled' : ''}>${P.analyzing ? '<span class="spin">⟳</span> 判別中…' : '工種を判別する'}</button>
+          ${!P.kind ? '<span class="hint">　まず写真を選んでください</span>' : ''}
+        </div>
+        ${cands}
+      </div>
+    </div>
+    <div class="photo-results">${results}</div>
+  </section>`;
+}
+
+/* ===== ライブラリビュー ===== */
+function libSView() {
+  const sel = ACCIDENTS.find((a) => a.id === S.selAccident) || ACCIDENTS[0];
+  return `<section class="view lib on">
+    <div class="lib-left"><div class="card">
+      <h2>災害事例ライブラリ</h2>
+      <div class="lib-grid">${ACCIDENTS.map((a) => `
+        <button class="lib-card ${sel.id === a.id ? 'sel' : ''}" data-act="lib-s" data-id="${a.id}">
+          <div class="meta"><span>${esc(a.category)}</span><span class="cid">#${a.id}</span></div>
+          <h3>${esc(a.title)}</h3><p>${esc(a.description)}</p>
+        </button>`).join('')}</div>
+    </div></div>
+    <div class="lib-right"><div class="card">
+      <h2>選択中の事例詳細・資料</h2>
+      <div class="items">${disasterCard(sel)}</div>
+    </div></div>
+  </section>`;
+}
+function libQView() {
+  const list = S.qFilter === 'all' ? CASES : CASES.filter((c) => c.trade === S.qFilter);
+  const sel = CASES.find((c) => c.id === S.selCase) || CASES[0];
+  const chips = [`<button data-act="chip" data-id="all" class="${S.qFilter === 'all' ? 'on' : ''}">全て（${CASES.length}）</button>`,
+    ...Object.values(TRADES).map((t) => `<button data-act="chip" data-id="${t.id}" class="${S.qFilter === t.id ? 'on' : ''}">${esc(t.label)}（${CASES.filter((c) => c.trade === t.id).length}）</button>`)].join('');
+  return `<section class="view lib on">
+    <div class="lib-left"><div class="card">
+      <h2>品質不具合事例ライブラリ</h2>
+      <div class="chips">${chips}</div>
+      <div class="lib-grid">${list.map((c) => `
+        <button class="lib-card ${sel.id === c.id ? 'sel' : ''}" data-act="lib-q" data-id="${c.id}">
+          <div class="meta"><span class="chip">${esc(TRADES[c.trade].label)}</span><span class="cid">#${c.id}</span></div>
+          <h3>${esc(c.title)}</h3><p>${esc(c.description)}</p>
+        </button>`).join('')}</div>
+    </div></div>
+    <div class="lib-right"><div class="card">
+      <h2>選択中の事例詳細・資料</h2>
+      <div class="items">${qualityCard(sel)}</div>
+    </div></div>
+  </section>`;
+}
+
+/* ===== 描画とイベント ===== */
+const VIEWS = { sim: simView, photo: photoView, 'lib-s': libSView, 'lib-q': libQView };
+function render() {
+  $('#main').innerHTML = VIEWS[S.tab]();
+  $$('#nav button').forEach((b) => b.classList.toggle('on', b.dataset.tab === S.tab));
+  bindGantt();
+}
+$('#nav').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-tab]');
+  if (!b) return;
+  S.tab = b.dataset.tab;
+  render();
+});
+$('#sideToggle').addEventListener('click', () => {
+  const app = $('#app');
+  app.classList.toggle('closed');
+  $('#sideToggle').textContent = app.classList.contains('closed') ? '›' : '‹';
+});
+
+function bindGantt() {
+  const line = $('#todayLine'), scroll = $('#gScroll');
+  if (!line || !scroll) return;
+  line.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    const startX = e.clientX, startOff = S.dayOffset;
+    const move = (ev) => {
+      const off = Math.max(0, Math.min(TOTAL, Math.round(startOff + (ev.clientX - startX) / DAY_W)));
+      line.style.left = `${LABEL_W + off * DAY_W}px`;
+      line.querySelector('.pill').textContent = fDate(addD(START, off));
+      line._off = off;
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      if (line._off !== undefined && line._off !== S.dayOffset) { S.dayOffset = line._off; render(); }
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  });
+}
+
+$('#main').addEventListener('click', (e) => {
+  const fold = e.target.closest('[data-act="fold"]');
+  if (fold) {
+    const card = fold.closest('.case');
+    card.classList.toggle('open');
+    fold.innerHTML = card.classList.contains('open') ? '詳細を閉じる ▴' : '詳細表示 ▾';
+    return;
+  }
+  const zq = e.target.closest('[data-zoom-q]');
+  if (zq) { const c = CASES.find((x) => x.id === zq.dataset.zoomQ); if (c) openModal([qImg(c)], 0, c.title); return; }
+  const za = e.target.closest('[data-zoom-acc]');
+  if (za) { const a = ACCIDENTS.find((x) => x.id === Number(za.dataset.zoomAcc)); if (a) openModal(a.imageFiles.map((f) => accImg(a, f)), 0, a.title); return; }
+  const t = e.target.closest('[data-act]');
+  if (!t) return;
+  const act = t.dataset.act;
+  if (act === 'photo-sample') { S.photo = { ...S.photo, kind: 'sample', sampleId: t.dataset.id, cands: null, chosen: null }; render(); }
+  else if (act === 'analyze') { runAnalyze(); }
+  else if (act === 'cand') { S.photo.chosen = t.dataset.trade; render(); }
+  else if (act === 'lib-s') { S.selAccident = Number(t.dataset.id); render(); }
+  else if (act === 'lib-q') { S.selCase = t.dataset.id; render(); }
+  else if (act === 'chip') { S.qFilter = t.dataset.id; render(); }
+});
+document.addEventListener('change', (e) => {
+  if (e.target.id !== 'upFile') return;
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  S.photo = { kind: 'upload', sampleId: null, upUrl: URL.createObjectURL(file), upName: file.name, analyzing: false, cands: null, chosen: null };
+  render();
+});
+function runAnalyze() {
+  const P = S.photo;
+  if (!P.kind || P.analyzing) return;
+  P.analyzing = true; P.cands = null; P.chosen = null;
+  render();
+  setTimeout(() => {
+    let result;
+    if (P.kind === 'sample') {
+      const s = SAMPLE_PHOTOS.find((p) => p.id === P.sampleId);
+      result = s ? s.candidates : [];
+    } else {
+      const order = ['rebar', 'concrete', 'steel'];
+      const seed = (P.upName || '').length % 3;
+      const rotated = [...order.slice(seed), ...order.slice(0, seed)];
+      const scores = [64, 51, 40];
+      const notes = { rebar: '鉄筋らしき格子パターンを検出（決め打ち）', concrete: 'コンクリート面らしき領域を検出（決め打ち）', steel: '鋼材らしき要素を検出（決め打ち）' };
+      result = rotated.map((trade, i) => ({ trade, score: scores[i], note: notes[trade] }));
+    }
+    P.cands = result;
+    P.chosen = result.length ? result[0].trade : null;
+    P.analyzing = false;
+    render();
+  }, 900);
+}
+
+/* ===== モーダル ===== */
+let M = { imgs: [], idx: 0 };
+function openModal(imgs, idx, title) {
+  M = { imgs, idx };
+  $('#modal').classList.add('on');
+  showModal(title);
+}
+function showModal() {
+  $('#mImg').src = M.imgs[M.idx];
+  $('#mPage').textContent = `${M.idx + 1} / ${M.imgs.length}`;
+  $('#mPrev').disabled = M.idx === 0;
+  $('#mNext').disabled = M.idx >= M.imgs.length - 1;
+}
+function closeModal() { $('#modal').classList.remove('on'); }
+$('#mClose').addEventListener('click', closeModal);
+$('#modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
+$('#mPrev').addEventListener('click', () => { if (M.idx > 0) { M.idx--; showModal(); } });
+$('#mNext').addEventListener('click', () => { if (M.idx < M.imgs.length - 1) { M.idx++; showModal(); } });
+document.addEventListener('keydown', (e) => {
+  if (!$('#modal').classList.contains('on')) return;
+  if (e.key === 'Escape') closeModal();
+  if (e.key === 'ArrowRight' && M.idx < M.imgs.length - 1) { M.idx++; showModal(); }
+  if (e.key === 'ArrowLeft' && M.idx > 0) { M.idx--; showModal(); }
+});
+
+render();
+</script>
+</body>
 </html>
