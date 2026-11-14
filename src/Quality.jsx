@@ -77,10 +77,40 @@ export function QualityCaseCard({ item }) {
   );
 }
 
-// 工程表タブの右カラム：品質不具合事例パネル
-export function QualityPanel({ activeTasks }) {
+// 日付をシードにした決定的シャッフル（同じ日は同じ並び、翌日は違う並びになる）
+const seededShuffle = (list, seedText) => {
+  let seed = 2166136261;
+  for (let i = 0; i < seedText.length; i++) {
+    seed ^= seedText.charCodeAt(i);
+    seed = Math.imul(seed, 16777619);
+  }
+  const rand = () => {
+    seed = Math.imul(seed ^ (seed >>> 15), 2246822519);
+    seed = Math.imul(seed ^ (seed >>> 13), 3266489917);
+    seed ^= seed >>> 16;
+    return (seed >>> 0) / 4294967296;
+  };
+  const arr = [...list];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
+
+export const DAILY_PICK_COUNT = 10;
+
+// 同じ工事期間でも日ごとに違う事例が出るよう、その日の「重点事例」を選ぶ
+export const dailyCases = (pool, dateStr, count = DAILY_PICK_COUNT) => {
+  if (pool.length <= count) return pool;
+  return seededShuffle(pool, `quality-${dateStr}`).slice(0, count);
+};
+
+// 工程表タブの右カラム：品質不具合事例パネル（日替わりローテーション）
+export function QualityPanel({ activeTasks, dateStr }) {
   const tradeIds = useMemo(() => qualityTradesForTasks(activeTasks), [activeTasks]);
-  const cases = useMemo(() => CASES.filter((item) => tradeIds.has(item.trade)), [tradeIds]);
+  const pool = useMemo(() => CASES.filter((item) => tradeIds.has(item.trade)), [tradeIds]);
+  const cases = useMemo(() => dailyCases(pool, dateStr || ''), [pool, dateStr]);
   return (
     <section className="panel detail-list-panel">
       <h2>
@@ -88,7 +118,10 @@ export function QualityPanel({ activeTasks }) {
       </h2>
       <p className="list-summary">
         対象工種：
-        {tradeIds.size > 0 ? [...tradeIds].map((t) => TRADES[t].label).join('、') : 'なし'}／事例 {cases.length} 件
+        {tradeIds.size > 0 ? [...tradeIds].map((t) => TRADES[t].label).join('、') : 'なし'}
+        {pool.length > cases.length
+          ? `／全${pool.length}件から本日の重点${cases.length}件（日付でローテーション）`
+          : `／事例 ${cases.length} 件`}
       </p>
       {cases.length === 0 && (
         <div className="empty-block">

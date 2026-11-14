@@ -12,7 +12,7 @@ import {
 import { PhotoPanel, QualityLibraryPanel, QualityPanel } from './Quality';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const DAY_WIDTH = 12;
+const DAY_WIDTH = 7;
 const LABEL_WIDTH = 280;
 const TICK_DAYS = 14;
 
@@ -411,7 +411,7 @@ function App() {
                 </div>
               </section>
 
-              <QualityPanel activeTasks={activeTasks} />
+              <QualityPanel activeTasks={activeTasks} dateStr={formatDate(currentDate)} />
               </div>
             </div>
           )}

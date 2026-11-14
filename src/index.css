@@ -342,13 +342,13 @@ input {
   display: grid;
   gap: 3px;
   padding-top: 5px;
-  /* 14日ごとの縦罫（ラベル幅280px + 14日×12px=168px周期） */
+  /* 14日ごとの縦罫（ラベル幅280px + 14日×7px=98px周期） */
   background-image: repeating-linear-gradient(
     90deg,
     rgba(100, 116, 139, 0.13) 0,
     rgba(100, 116, 139, 0.13) 1px,
     transparent 1px,
-    transparent 168px
+    transparent 98px
   );
   background-position: 280px 0;
   background-repeat: repeat-y;
