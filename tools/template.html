@@ -393,19 +393,33 @@ function qualityCard(c) {
 }
 
 /* ===== 工程表ビュー ===== */
-function simView() {
-  const tasks = activeTasks();
+function listsHTML() {
   const sugg = disasterNow();
   const { trades, pool } = qualityPool();
   const picks = dailyCases(pool, fDate(curDate()));
   const imgTotal = sugg.reduce((n, a) => n + a.imageFiles.length, 0);
+  return `
+      <div class="card list-card">
+        <h2><span class="dot" style="background:var(--red)"></span>災害事例（左）</h2>
+        <p class="summary">事例 ${sugg.length} 件／資料画像 合計 ${imgTotal} 枚</p>
+        ${sugg.length === 0 ? '<div class="empty">この日付に該当する重点警戒事例はありません。</div>' : `<div class="items">${sugg.map(disasterCard).join('')}</div>`}
+      </div>
+      <div class="card list-card">
+        <h2><span class="dot" style="background:var(--teal)"></span>品質不具合事例（右）</h2>
+        <p class="summary">対象工種：${trades.size ? [...trades].map((t) => TRADES[t].label).join('、') : 'なし'}${pool.length > picks.length ? `／全${pool.length}件から本日の重点${picks.length}件（日付でローテーション）` : `／事例 ${picks.length} 件`}</p>
+        ${picks.length === 0 ? '<div class="empty">この日の工程に対応する品質事例はありません。品質事例があるのは躯体系の工程（地下・基礎／躯体・コンクリ／鉄骨・躯体）で、対象は鉄筋・コンクリート・鉄骨の3工種です。他工種は準備中です。</div>' : `<div class="items">${picks.map(qualityCard).join('')}</div>`}
+      </div>`;
+}
+function simView() {
+  const tasks = activeTasks();
   let ticks = '';
   for (let d = 0; d <= TOTAL; d += TICK) { const t = addD(START, d); ticks += `<span style="left:${d * DAY_W}px">${t.getMonth() + 1}/${t.getDate()}</span>`; }
   const rows = SCHEDULE.map((x) => {
     const act = tasks.some((t) => t.id === x.id);
-    const left = LABEL_W + diffD(START, pDate(x.start)) * DAY_W;
-    const w = Math.max(30, (diffD(pDate(x.start), pDate(x.end)) + 1) * DAY_W);
-    return `<div class="g-row ${act ? 'act' : ''}"><div class="nm" title="${esc(x.task)}">${esc(x.task)}</div><div class="bar" style="left:${left}px;width:${w}px"></div></div>`;
+    const so = diffD(START, pDate(x.start)), eo = diffD(START, pDate(x.end));
+    const left = LABEL_W + so * DAY_W;
+    const w = Math.max(30, (eo - so + 1) * DAY_W);
+    return `<div class="g-row ${act ? 'act' : ''}" data-so="${so}" data-eo="${eo}"><div class="nm" title="${esc(x.task)}">${esc(x.task)}</div><div class="bar" style="left:${left}px;width:${w}px"></div></div>`;
   }).join('');
   const lineLeft = LABEL_W + S.dayOffset * DAY_W;
   return `<section class="view sim on">
@@ -420,18 +434,7 @@ function simView() {
         </div>
       </div>
     </div>
-    <div class="dual">
-      <div class="card list-card">
-        <h2><span class="dot" style="background:var(--red)"></span>災害事例（左）</h2>
-        <p class="summary">事例 ${sugg.length} 件／資料画像 合計 ${imgTotal} 枚</p>
-        ${sugg.length === 0 ? '<div class="empty">この日付に該当する重点警戒事例はありません。</div>' : `<div class="items">${sugg.map(disasterCard).join('')}</div>`}
-      </div>
-      <div class="card list-card">
-        <h2><span class="dot" style="background:var(--teal)"></span>品質不具合事例（右）</h2>
-        <p class="summary">対象工種：${trades.size ? [...trades].map((t) => TRADES[t].label).join('、') : 'なし'}${pool.length > picks.length ? `／全${pool.length}件から本日の重点${picks.length}件（日付でローテーション）` : `／事例 ${picks.length} 件`}</p>
-        ${picks.length === 0 ? '<div class="empty">この日の工程に対応する品質事例はありません。品質事例があるのは躯体系の工程（地下・基礎／躯体・コンクリ／鉄骨・躯体）で、対象は鉄筋・コンクリート・鉄骨の3工種です。他工種は準備中です。</div>' : `<div class="items">${picks.map(qualityCard).join('')}</div>`}
-      </div>
-    </div>
+    <div class="dual" id="dual">${listsHTML()}</div>
   </section>`;
 }
 
@@ -558,16 +561,25 @@ function bindGantt() {
   line.addEventListener('pointerdown', (e) => {
     e.preventDefault();
     const startX = e.clientX, startOff = S.dayOffset;
+    const syncDay = (off) => {
+      // ドラッグ中も日付が変わった瞬間に事例リストと工程の強調を追従させる
+      S.dayOffset = off;
+      const dual = $('#dual');
+      if (dual) dual.innerHTML = listsHTML();
+      $$('.g-row').forEach((r) => {
+        const so = Number(r.dataset.so), eo = Number(r.dataset.eo);
+        r.classList.toggle('act', so <= off && off <= eo);
+      });
+    };
     const move = (ev) => {
       const off = Math.max(0, Math.min(TOTAL, Math.round(startOff + (ev.clientX - startX) / DAY_W)));
       line.style.left = `${LABEL_W + off * DAY_W}px`;
       line.querySelector('.pill').textContent = fDate(addD(START, off));
-      line._off = off;
+      if (off !== S.dayOffset) syncDay(off);
     };
     const up = () => {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
-      if (line._off !== undefined && line._off !== S.dayOffset) { S.dayOffset = line._off; render(); }
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
