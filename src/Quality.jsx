@@ -23,22 +23,25 @@ const assetUrl = (path) => {
 
 const caseImageUrl = (item) => assetUrl(`quality-illust/${item.trade}-${item.illust}.png`);
 
+const SEV_CLASS = { '重大': 'high', '中': 'mid', '軽微': 'low' };
+
 export function QualityCaseCard({ item }) {
   const [zoom, setZoom] = useState(false);
   const trade = TRADES[item.trade];
   const src = caseImageUrl(item);
   return (
-    <article className="incident-item">
+    <article className="incident-item quality-card">
       <div className="incident-images">
         <img src={src} alt={`${item.title} イラスト`} onClick={() => setZoom(true)} />
       </div>
       <div className="incident-text">
         <div className="meta">
-          <span>{trade.label}</span>
-          <span>#{item.id}</span>
+          <span className="trade-chip">{trade.label}</span>
+          <span className="case-id">#{item.id}</span>
         </div>
         <p className="type">
-          {item.type}／重大度：{item.severity}／発見：{item.foundAt}／部位：{item.part}
+          {item.type}／発見：{item.foundAt}／部位：{item.part}
+          <span className={`sev sev-${SEV_CLASS[item.severity] || 'low'}`}>重大度：{item.severity}</span>
         </p>
         <h3>{item.title}</h3>
         <p>{item.description}</p>
