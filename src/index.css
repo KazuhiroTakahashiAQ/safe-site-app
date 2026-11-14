@@ -635,3 +635,240 @@ input {
     overflow: auto;
   }
 }
+
+/* --- 統合：工程表下の左右2カラム（左=災害事例 / 右=品質不具合事例） --- */
+.dual-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  min-height: 0;
+}
+
+.dual-panels .detail-list-panel {
+  min-height: 0;
+}
+
+@media (max-width: 1080px) {
+  .dual-panels {
+    grid-template-columns: 1fr;
+  }
+}
+/* --- 写真で判別タブ --- */
+.photo-layout {
+  display: grid;
+  grid-template-rows: auto minmax(220px, 1fr);
+  gap: 16px;
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+}
+
+.photo-panel {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.photo-picker {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.photo-thumb {
+  border: 2px solid #d6deea;
+  border-radius: 12px;
+  background: #fff;
+  padding: 6px;
+  display: grid;
+  gap: 6px;
+  cursor: pointer;
+  text-align: center;
+  color: #2f3c52;
+  font-weight: 700;
+  font-size: 1rem;
+  align-content: start;
+}
+
+.photo-thumb img {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.photo-thumb.is-selected {
+  border-color: #2d63d3;
+  background: #edf3ff;
+}
+
+.photo-upload {
+  align-content: center;
+  justify-items: center;
+  min-height: 140px;
+  color: #2d63d3;
+  border-style: dashed;
+}
+
+.photo-preview img {
+  width: 100%;
+  max-height: 380px;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 1px solid #d6deea;
+  background: #fff;
+}
+
+.photo-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.primary-button {
+  border: 0;
+  border-radius: 10px;
+  background: #2d63d3;
+  color: #fff;
+  font-weight: 800;
+  padding: 10px 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.primary-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.photo-hint {
+  color: #7587a1;
+  font-size: 1.05rem;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.candidate-block {
+  display: grid;
+  gap: 8px;
+}
+
+.candidate-block h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  color: #1d2a40;
+}
+
+.candidate-row {
+  display: grid;
+  grid-template-columns: 150px minmax(80px, 1fr) 52px minmax(0, 1.4fr);
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #d6deea;
+  border-radius: 10px;
+  background: #fff;
+  padding: 9px 12px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.candidate-row.is-selected {
+  border-color: #2d63d3;
+  background: #edf3ff;
+}
+
+.candidate-name {
+  font-weight: 800;
+  color: #1d2a40;
+  font-size: 1.15rem;
+}
+
+.candidate-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: #e4eaf3;
+  overflow: hidden;
+  display: block;
+}
+
+.candidate-bar i {
+  display: block;
+  height: 100%;
+  background: #2d63d3;
+  border-radius: 999px;
+}
+
+.candidate-score {
+  font-weight: 800;
+  color: #2d63d3;
+}
+
+.candidate-note {
+  color: #5d6d82;
+  font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 12px;
+}
+
+.filter-chips button {
+  border: 1px solid #c6d2e3;
+  background: #fff;
+  color: #294a7f;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.filter-chips button.is-active {
+  background: #2d63d3;
+  border-color: #2d63d3;
+  color: #fff;
+}
+
+.library-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.library-panel .library-grid {
+  flex: 1 1 auto;
+}
+
+@media (max-width: 1080px) {
+  .photo-picker {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .candidate-row {
+    grid-template-columns: 110px minmax(60px, 1fr) 46px;
+  }
+  .candidate-note {
+    display: none;
+  }
+  .photo-layout {
+    grid-template-rows: auto auto;
+  }
+}
+
+/* 品質パネル等で件数が多いとき、カードが縦に潰れずリスト側がスクロールするようにする */
+.incident-list > * {
+  flex-shrink: 0;
+}

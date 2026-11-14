@@ -3,10 +3,13 @@ import {
   AlertTriangle,
   BookOpen,
   CalendarDays,
+  Camera,
   ChevronLeft,
   ChevronRight,
   Construction,
+  LibraryBig,
 } from 'lucide-react';
+import { PhotoPanel, QualityLibraryPanel, QualityPanel } from './Quality';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DAY_WIDTH = 12;
@@ -286,6 +289,17 @@ function App() {
             <BookOpen size={17} />
             {sidebarOpen && '災害事例ライブラリ'}
           </button>
+          <button className={activeTab === 'photo' ? 'is-active' : ''} onClick={() => setActiveTab('photo')}>
+            <Camera size={17} />
+            {sidebarOpen && '写真で判別（品質）'}
+          </button>
+          <button
+            className={activeTab === 'quality-library' ? 'is-active' : ''}
+            onClick={() => setActiveTab('quality-library')}
+          >
+            <LibraryBig size={17} />
+            {sidebarOpen && '品質事例ライブラリ'}
+          </button>
         </nav>
       </aside>
 
@@ -353,9 +367,10 @@ function App() {
                 </div>
               </section>
 
+              <div className="dual-panels">
               <section className="panel detail-list-panel">
                 <h2>
-                  <AlertTriangle size={18} /> 選択日の事例一覧（詳細・資料）
+                  <AlertTriangle size={18} /> 災害事例（左）
                 </h2>
                 <p className="list-summary">
                   事例 {currentSuggestions.length} 件 / 資料画像 合計 {currentSuggestionImageTotal} 枚
@@ -395,8 +410,15 @@ function App() {
                   ))}
                 </div>
               </section>
+
+              <QualityPanel activeTasks={activeTasks} />
+              </div>
             </div>
           )}
+
+          {activeTab === 'photo' && <PhotoPanel />}
+
+          {activeTab === 'quality-library' && <QualityLibraryPanel />}
 
           {activeTab === 'library' && (
             <div className="library-layout">
