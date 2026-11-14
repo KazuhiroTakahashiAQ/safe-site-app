@@ -99,12 +99,26 @@ input {
   box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.06);
 }
 
+.sidebar-head {
+  padding: 0 12px 4px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.layout-root.sidebar-collapsed .sidebar-head {
+  flex-direction: column;
+  padding: 0 0 4px;
+  gap: 10px;
+}
+
 .brand {
-  padding: 0 18px 4px;
   display: flex;
   align-items: center;
   gap: 11px;
   color: #f6f9ff;
+  min-width: 0;
 }
 
 .brand svg {
@@ -168,7 +182,7 @@ input {
 /* ---------- メイン ---------- */
 .main-area {
   display: grid;
-  grid-template-rows: 62px 1fr;
+  grid-template-rows: 50px 1fr;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
@@ -180,26 +194,20 @@ input {
   padding: 0 22px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 10px;
   min-width: 0;
   z-index: 20;
 }
 
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-
+/* 開閉ボタンはサイドバー側に配置（ダーク地用） */
 .sidebar-toggle {
-  border: 1px solid var(--line);
-  background: #fff;
-  color: var(--ink-2);
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
+  border: 1px solid rgba(203, 216, 238, 0.35);
+  background: rgba(148, 184, 255, 0.1);
+  color: #dbe6fa;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -209,19 +217,8 @@ input {
 }
 
 .sidebar-toggle:hover {
-  background: var(--blue-tint);
-  color: var(--blue);
-}
-
-.main-header h1 {
-  margin: 0;
-  font-size: clamp(1.7rem, 1.2rem + 1.4vw, 2.3rem);
-  font-weight: 800;
-  color: var(--ink);
-  letter-spacing: 0.03em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  background: rgba(148, 184, 255, 0.25);
+  color: #ffffff;
 }
 
 .risk-pill {
@@ -675,6 +672,57 @@ input {
   background: var(--teal-tint);
   border-color: #c9efe7;
   border-left-color: var(--teal-bright);
+}
+
+/* カードの詳細fold */
+.card-detail {
+  display: grid;
+  gap: 5px;
+  align-content: start;
+}
+
+.detail-toggle {
+  justify-self: start;
+  margin-top: 4px;
+  border: 1px solid var(--line);
+  background: #f8fafc;
+  color: var(--blue);
+  border-radius: 999px;
+  padding: 5px 13px;
+  font-size: 1.02rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.detail-toggle:hover {
+  background: var(--blue-tint);
+  border-color: #b9d0f7;
+}
+
+.quality-card .detail-toggle {
+  color: var(--teal);
+}
+
+.quality-card .detail-toggle:hover {
+  background: var(--teal-tint);
+  border-color: #99e5d8;
+}
+
+/* 写真判別の結果（品質＋安全を縦に積む） */
+.photo-results {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  min-height: 0;
+  overflow: auto;
+}
+
+.safety-results h2 svg {
+  color: var(--red);
 }
 
 /* ---------- ライブラリ ---------- */

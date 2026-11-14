@@ -1,6 +1,13 @@
 import { useMemo, useState } from 'react';
-import { AlertTriangle, Loader2, ScanSearch, Upload } from 'lucide-react';
+import { AlertTriangle, ChevronDown, ChevronUp, Loader2, ScanSearch, ShieldAlert, Upload } from 'lucide-react';
 import { TRADES, CASES, SAMPLE_PHOTOS } from './qualityData';
+
+// 工種 → 関連する災害事例カテゴリ（写真判別で安全事例も出すため）
+export const TRADE_TO_DISASTER_CATEGORIES = {
+  rebar: ['躯体・コンクリ', '地下・基礎'],
+  concrete: ['躯体・コンクリ', '地下・基礎'],
+  steel: ['鉄骨・躯体'],
+};
 
 // 工程表カテゴリ → 品質工種の対応（品質事例があるのは躯体系のみ）
 export const CATEGORY_TO_TRADES = {
@@ -27,6 +34,7 @@ const SEV_CLASS = { '重大': 'high', '中': 'mid', '軽微': 'low' };
 
 export function QualityCaseCard({ item }) {
   const [zoom, setZoom] = useState(false);
+  const [open, setOpen] = useState(false);
   const trade = TRADES[item.trade];
   const src = caseImageUrl(item);
   return (
@@ -45,20 +53,35 @@ export function QualityCaseCard({ item }) {
         </p>
         <h3>{item.title}</h3>
         <p>{item.description}</p>
-        <p>
-          <strong>原因：</strong>
-          {item.cause}
-        </p>
-        <p>
-          <strong>是正：</strong>
-          {item.correction}
-        </p>
-        <div className="tags">
-          {item.keywords.map((keyword) => (
-            <span key={keyword}>{keyword}</span>
-          ))}
-        </div>
-        <p className="countermeasure">再発防止：{item.countermeasure}</p>
+        {open && (
+          <div className="card-detail">
+            <p>
+              <strong>原因：</strong>
+              {item.cause}
+            </p>
+            <p>
+              <strong>是正：</strong>
+              {item.correction}
+            </p>
+            <div className="tags">
+              {item.keywords.map((keyword) => (
+                <span key={keyword}>{keyword}</span>
+              ))}
+            </div>
+            <p className="countermeasure">再発防止：{item.countermeasure}</p>
+          </div>
+        )}
+        <button className="detail-toggle" onClick={() => setOpen((prev) => !prev)}>
+          {open ? (
+            <>
+              <ChevronUp size={15} /> 詳細を閉じる
+            </>
+          ) : (
+            <>
+              <ChevronDown size={15} /> 詳細表示
+            </>
+          )}
+        </button>
       </div>
       {zoom && (
         <div className="image-modal" onClick={() => setZoom(false)}>
@@ -138,7 +161,7 @@ export function QualityPanel({ activeTasks, dateStr }) {
 }
 
 // 写真で判別タブ（判別はデモ用決め打ち）
-export function PhotoPanel() {
+export function PhotoPanel({ accidents = [], onZoom, DisasterCard }) {
   const [photoSrc, setPhotoSrc] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [candidates, setCandidates] = useState(null);
@@ -156,6 +179,14 @@ export function PhotoPanel() {
     () => (chosenTrade ? CASES.filter((item) => item.trade === chosenTrade) : []),
     [chosenTrade],
   );
+
+  const safetyCases = useMemo(() => {
+    if (!chosenTrade) return [];
+    const cats = TRADE_TO_DISASTER_CATEGORIES[chosenTrade] || [];
+    return accidents.filter(
+      (a) => cats.includes(a.category) || a.relatedCategories?.some((c) => cats.includes(c)),
+    );
+  }, [chosenTrade, accidents]);
 
   const resetResult = () => {
     setCandidates(null);
@@ -201,10 +232,10 @@ export function PhotoPanel() {
     <div className="photo-layout">
       <section className="panel photo-panel">
         <h2>
-          <ScanSearch size={18} /> 現場写真から工種を判別（品質）
+          <ScanSearch size={18} /> 現場写真から工種を判別
         </h2>
         <p className="panel-note">
-          写真を選ぶ（またはアップロードする）と、写っている工種の候補を提示します。候補から工種を選ぶと、その工種の品質不具合事例が下に表示されます。
+          写真を選ぶ（またはアップロードする）と、写っている工種の候補を提示します。候補から工種を選ぶと、その工種の品質不具合事例と、関連する安全（災害）事例が下に表示されます。
           <strong>デモ版では判別は決め打ちです</strong>（本番ではLLMの画像認識で判別する想定）。
         </p>
 
@@ -273,16 +304,31 @@ export function PhotoPanel() {
       </section>
 
       {chosenTrade && candidates && (
-        <section className="panel detail-list-panel">
-          <h2>
-            {TRADES[chosenTrade].label}の不具合事例（{photoCases.length}件）
-          </h2>
-          <div className="incident-list">
-            {photoCases.map((item) => (
-              <QualityCaseCard key={item.id} item={item} />
-            ))}
-          </div>
-        </section>
+        <div className="photo-results">
+          <section className="panel detail-list-panel">
+            <h2>
+              {TRADES[chosenTrade].label}の不具合事例（{photoCases.length}件）
+            </h2>
+            <div className="incident-list">
+              {photoCases.map((item) => (
+                <QualityCaseCard key={item.id} item={item} />
+              ))}
+            </div>
+          </section>
+
+          {DisasterCard && safetyCases.length > 0 && (
+            <section className="panel detail-list-panel safety-results">
+              <h2>
+                <ShieldAlert size={18} /> 関連する安全（災害）事例（{safetyCases.length}件）
+              </h2>
+              <div className="incident-list">
+                {safetyCases.map((accident) => (
+                  <DisasterCard key={accident.id} accident={accident} onZoom={onZoom} />
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
       )}
     </div>
   );

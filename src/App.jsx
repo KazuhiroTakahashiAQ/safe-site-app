@@ -4,8 +4,10 @@ import {
   BookOpen,
   CalendarDays,
   Camera,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   Construction,
   LibraryBig,
 } from 'lucide-react';
@@ -174,6 +176,53 @@ const toImageUrl = (accident, fileName) => {
   return `${normalizedBase}image-assets/${accident.id}/${fileName}?v=${IMAGE_CACHE_BUST}`;
 };
 
+// 災害事例カード（概要のみ表示し、詳細は「詳細表示」で展開）
+export function DisasterCaseCard({ accident, onZoom }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <article className="incident-item">
+      <div className="incident-images">
+        <img
+          src={toImageUrl(accident, accident.imageFiles[0])}
+          alt={`${accident.title} 1`}
+          onClick={() => onZoom(accident, 0)}
+        />
+      </div>
+      <div className="incident-text">
+        <div className="meta">
+          <span>{accident.category}</span>
+          <span className="case-id">#{accident.id}</span>
+        </div>
+        <p className="type">{accident.type}</p>
+        <h3>{accident.title}</h3>
+        <p>{accident.description}</p>
+        {open && (
+          <div className="card-detail">
+            <p className="image-count">資料画像: {accident.imageFiles.length} 枚（画像クリックで拡大）</p>
+            <div className="tags">
+              {accident.keywords.map((keyword) => (
+                <span key={keyword}>{keyword}</span>
+              ))}
+            </div>
+            <p className="countermeasure">再発防止策: {accident.countermeasure}</p>
+          </div>
+        )}
+        <button className="detail-toggle" onClick={() => setOpen((prev) => !prev)}>
+          {open ? (
+            <>
+              <ChevronUp size={15} /> 詳細を閉じる
+            </>
+          ) : (
+            <>
+              <ChevronDown size={15} /> 詳細表示
+            </>
+          )}
+        </button>
+      </div>
+    </article>
+  );
+}
+
 function App() {
   const [activeTab, setActiveTab] = useState('simulation');
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -270,14 +319,23 @@ function App() {
   return (
     <div className={`layout-root ${sidebarOpen ? '' : 'sidebar-collapsed'}`}>
       <aside className="sidebar">
-        <div className="brand">
-          <Construction size={30} />
-          {sidebarOpen && (
-            <div>
-              <strong>事故事例</strong>
-              <strong>提案くん</strong>
-            </div>
-          )}
+        <div className="sidebar-head">
+          <div className="brand">
+            <Construction size={30} />
+            {sidebarOpen && (
+              <div>
+                <strong>事故事例</strong>
+                <strong>提案くん</strong>
+              </div>
+            )}
+          </div>
+          <button
+            className="sidebar-toggle"
+            onClick={() => setSidebarOpen((prev) => !prev)}
+            aria-label="サイドバーを開閉"
+          >
+            {sidebarOpen ? <ChevronLeft size={17} /> : <ChevronRight size={17} />}
+          </button>
         </div>
 
         <nav className="menu">
@@ -285,32 +343,26 @@ function App() {
             <CalendarDays size={17} />
             {sidebarOpen && '工程表'}
           </button>
+          <button className={activeTab === 'photo' ? 'is-active' : ''} onClick={() => setActiveTab('photo')}>
+            <Camera size={17} />
+            {sidebarOpen && '写真で判別'}
+          </button>
           <button className={activeTab === 'library' ? 'is-active' : ''} onClick={() => setActiveTab('library')}>
             <BookOpen size={17} />
             {sidebarOpen && '災害事例ライブラリ'}
-          </button>
-          <button className={activeTab === 'photo' ? 'is-active' : ''} onClick={() => setActiveTab('photo')}>
-            <Camera size={17} />
-            {sidebarOpen && '写真で判別（品質）'}
           </button>
           <button
             className={activeTab === 'quality-library' ? 'is-active' : ''}
             onClick={() => setActiveTab('quality-library')}
           >
             <LibraryBig size={17} />
-            {sidebarOpen && '品質事例ライブラリ'}
+            {sidebarOpen && '不具合事例ライブラリ'}
           </button>
         </nav>
       </aside>
 
       <main className="main-area">
         <header className="main-header">
-          <div className="header-left">
-            <button className="sidebar-toggle" onClick={() => setSidebarOpen((prev) => !prev)}>
-              {sidebarOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
-            </button>
-            <h1>{formatDate(currentDate)}</h1>
-          </div>
           <div className="risk-pill">
             <AlertTriangle size={14} /> 稼働リスク: {currentSuggestions.length}件
           </div>
@@ -320,7 +372,7 @@ function App() {
           {activeTab === 'simulation' && (
             <div className="simulation-layout">
               <section className="panel">
-                <h2>今日起こりそうな事故</h2>
+                <h2>今日起こりそうな事故・不具合</h2>
                 <p className="panel-note">
                   赤い縦ラインをドラッグして日付を変更してください。その日の工程に基づいた事例が表示されます。
                 </p>
@@ -382,31 +434,7 @@ function App() {
 
                 <div className="incident-list">
                   {currentSuggestions.map((accident) => (
-                    <article key={accident.id} className="incident-item">
-                      <div className="incident-images">
-                        <img
-                          src={toImageUrl(accident, accident.imageFiles[0])}
-                          alt={`${accident.title} 1`}
-                          onClick={() => openZoom(accident, 0)}
-                        />
-                      </div>
-
-                      <div className="incident-text">
-                        <div className="meta">
-                          <span>{accident.category}</span>
-                          <span>#{accident.id}</span>
-                        </div>
-                        <p className="image-count">資料画像: {accident.imageFiles.length} 枚</p>
-                        <h3>{accident.title}</h3>
-                        <p>{accident.description}</p>
-                        <div className="tags">
-                          {accident.keywords.map((keyword) => (
-                            <span key={keyword}>{keyword}</span>
-                          ))}
-                        </div>
-                        <p className="countermeasure">再発防止策: {accident.countermeasure}</p>
-                      </div>
-                    </article>
+                    <DisasterCaseCard key={accident.id} accident={accident} onZoom={openZoom} />
                   ))}
                 </div>
               </section>
@@ -416,7 +444,9 @@ function App() {
             </div>
           )}
 
-          {activeTab === 'photo' && <PhotoPanel />}
+          {activeTab === 'photo' && (
+            <PhotoPanel accidents={ACCIDENTS} onZoom={openZoom} DisasterCard={DisasterCaseCard} />
+          )}
 
           {activeTab === 'quality-library' && <QualityLibraryPanel />}
 
@@ -444,21 +474,7 @@ function App() {
 
               <section className="panel detail-list-panel">
                 <h2>選択中の事例詳細・資料</h2>
-                <article className="incident-item">
-                  <div className="incident-images">
-                    <img
-                      src={toImageUrl(selectedAccident, selectedAccident.imageFiles[0])}
-                      alt={`${selectedAccident.title} 1`}
-                      onClick={() => openZoom(selectedAccident, 0)}
-                    />
-                  </div>
-                  <div className="incident-text">
-                    <p className="type">{selectedAccident.type}</p>
-                    <h3>{selectedAccident.title}</h3>
-                    <p>{selectedAccident.description}</p>
-                    <p className="countermeasure">再発防止策: {selectedAccident.countermeasure}</p>
-                  </div>
-                </article>
+                <DisasterCaseCard accident={selectedAccident} onZoom={openZoom} />
               </section>
             </div>
           )}
