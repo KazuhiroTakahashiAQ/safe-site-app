@@ -1,4 +1,5 @@
-// 現行React版からデータを抽出して data.json を作る（単一HTML版の生成用）
+// 【移行用・実行済み】旧React版からデータを抽出して data.json を作ったワンタイムツール。
+// 現在は data.json 自体が正本（src/ は廃止済み）。データの修正は data.json を直接編集すること。
 import { readFileSync, writeFileSync } from 'node:fs';
 import { TRADES, CASES, SAMPLE_PHOTOS } from '../src/qualityData.js';
 
